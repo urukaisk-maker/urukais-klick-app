@@ -62,3 +62,6 @@ coverage/
 # Netlify / Vercel (si deployas)
 .netlify/
 .vercel/
+# Docker
+.env
+docker-compose.override.yml

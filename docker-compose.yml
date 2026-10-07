@@ -1,0 +1,93 @@
+services:
+  # ============================================
+  # 🗄️ POSTGRES
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: urukais-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-urukais}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-klick_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-urukais_klick}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-urukais}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - urukais-net
+
+  # ============================================
+  # ⚙️ BACKEND (NestJS)
+  # ============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: urukais-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-urukais}:${POSTGRES_PASSWORD:-klick_secret}@postgres:5432/${POSTGRES_DB:-urukais_klick}?schema=public
+      PORT: 3000
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+      JWT_SECRET: ${JWT_SECRET:-cambia_esto_en_produccion_minimo_32_chars}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-cambia_esto_tambien_minimo_32_chars}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    networks:
+      - urukais-net
+
+  # ============================================
+  # 🎨 FRONTEND (React + Nginx)
+  # ============================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: urukais-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    networks:
+      - urukais-net
+
+  # ============================================
+  # 🎛️ PGADMIN (opcional)
+  # ============================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: urukais-pgadmin
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@urukais.kl}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - urukais-net
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  urukais-net:
+    driver: bridge

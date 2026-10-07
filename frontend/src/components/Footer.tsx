@@ -23,6 +23,16 @@ export function Footer() {
             <ul className="space-y-1 text-xs">
               <li>
                 <a
+                  href="https://github.com/urukaisk-maker/urukais-klick-app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-sakura-300 transition-colors"
+                >
+                  🐙 Repositorio GitHub
+                </a>
+              </li>
+              <li>
+                <a
                   href="https://meek-frangipane-594897.netlify.app/"
                   target="_blank"
                   rel="noopener noreferrer"

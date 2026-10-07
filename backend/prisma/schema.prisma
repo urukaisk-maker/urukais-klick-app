@@ -1,0 +1,843 @@
+
+
+generator client  {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String    @unique
+  passwordHash  String
+  avatarUrl     String?
+  displayName   String?
+  bio           String?
+
+  xp            Int       @default(0)
+  level         Int       @default(1)
+  rank          Rank      @default(GENIN)
+  coins         Int       @default(0)
+
+  currentStreak  Int      @default(0)
+  longestStreak  Int      @default(0)
+  lastStreakDate DateTime? @db.Date
+
+  theme         String    @default("sakura")
+  mascotName    String    @default("Uru-chan")
+  soundEnabled  Boolean   @default(true)
+  language      String    @default("es")
+  timezone      String    @default("Europe/Madrid")
+
+  role             Role     @default(USER)
+  isActive         Boolean  @default(true)
+  emailVerified    Boolean  @default(false)
+  twoFactorEnabled Boolean  @default(false)
+  twoFactorSecret  String?
+  backupCodes      String[]
+  lastLoginAt      DateTime?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  categories         Category[]
+  subcategories      Subcategory[]
+  tasks              Task[]
+  subtasks           Subtask[]
+  notes              Note[]
+  tags               Tag[]
+  events             Event[]
+  reminders          Reminder[]
+  habits             Habit[]
+  habitLogs          HabitLog[]
+  goals              Goal[]
+  achievements       UserAchievement[]
+  xpLogs             XpLog[]
+  pomodoroSessions   PomodoroSession[]
+  notifications      Notification[]
+  sessions           Session[]
+  passwordResets     PasswordReset[]
+  emailVerifications EmailVerification[]
+  pushSubscriptions  PushSubscription[]
+  streakLogs         StreakLog[]
+  dailyRewards       DailyReward[]
+  purchases          Purchase[]
+  activityLogs       ActivityLog[]
+  mascot             Mascot?
+  friendshipsSent    Friendship[] @relation("FriendshipRequester")
+  friendshipsRecv    Friendship[] @relation("FriendshipAddressee")
+  taskShares         TaskShare[]
+
+  @@index([email])
+  @@index([username])
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum Rank {
+  GENIN
+  CHUNIN
+  JONIN
+  ANBU
+  HOKAGE
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshToken String   @unique
+  userAgent    String?
+  ip           String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model PasswordReset {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("password_resets")
+}
+
+model EmailVerification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique
+  email     String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("email_verifications")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String
+  slug        String
+  description String?
+  icon        String    @default("🌸")
+  color       String    @default("#FFB7C5")
+  coverUrl    String?
+  order       Int       @default(0)
+  isDefault   Boolean   @default(false)
+  isArchived  Boolean   @default(false)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  subcategories Subcategory[]
+  tasks         Task[]
+  events        Event[]
+  habits        Habit[]
+
+  @@unique([userId, slug])
+  @@index([userId])
+  @@map("categories")
+}
+
+model Subcategory {
+  id          String    @id @default(cuid())
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String
+  slug        String
+  description String?
+  icon        String    @default("✨")
+  color       String?
+  order       Int       @default(0)
+  isArchived  Boolean   @default(false)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  tasks       Task[]
+
+  @@unique([categoryId, slug])
+  @@index([userId])
+  @@map("subcategories")
+}
+
+model Task {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categoryId    String?
+  category      Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  subcategoryId String?
+  subcategory   Subcategory?  @relation(fields: [subcategoryId], references: [id], onDelete: SetNull)
+
+  title         String
+  description   String?
+  status        TaskStatus    @default(PENDING)
+  priority      Priority      @default(MEDIUM)
+
+  dueDate       DateTime?
+  startDate     DateTime?
+  completedAt   DateTime?
+  reminderAt    DateTime?
+
+  isRecurring   Boolean       @default(false)
+  recurrence    Json?
+
+  xpReward      Int           @default(10)
+  coinReward    Int           @default(1)
+  difficulty    Difficulty    @default(NORMAL)
+
+  sticker       String?
+  moodTag       String?
+
+  estimatedPomodoros Int      @default(1)
+
+  order         Int           @default(0)
+  isArchived    Boolean       @default(false)
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+
+  subtasks      Subtask[]
+  tags          TaskTag[]
+  attachments   Attachment[]
+  pomodoroSessions PomodoroSession[]
+  reminders     Reminder[]
+  shares        TaskShare[]
+
+  @@index([userId, status])
+  @@index([dueDate])
+  @@index([userId, deletedAt])
+  @@map("tasks")
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  OVERDUE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum Difficulty {
+  EASY
+  NORMAL
+  HARD
+  BOSS
+}
+
+model Subtask {
+  id          String    @id @default(cuid())
+  taskId      String
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String
+  isDone      Boolean   @default(false)
+  order       Int       @default(0)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([taskId])
+  @@map("subtasks")
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name      String
+  color     String   @default("#A855F7")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tasks     TaskTag[]
+
+  @@unique([userId, name])
+  @@map("tags")
+}
+
+model TaskTag {
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  tagId  String
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, tagId])
+  @@map("task_tags")
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  filename  String
+  url       String
+  mimeType  String?
+  size      Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("attachments")
+}
+
+model Note {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title      String
+  content    String    @db.Text
+  mood       String?
+  moodEmoji  String?
+  coverUrl   String?
+  isPinned   Boolean   @default(false)
+  isDiary    Boolean   @default(false)
+
+  date       DateTime  @default(now())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  @@index([userId, date])
+  @@map("notes")
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  title       String
+  description String?
+  location    String?
+  color       String    @default("#A855F7")
+
+  startAt     DateTime
+  endAt       DateTime
+  allDay      Boolean   @default(false)
+
+  recurrence  Json?
+  reminderAt  DateTime?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  reminders   Reminder[]
+
+  @@index([userId, startAt])
+  @@map("events")
+}
+
+model Reminder {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  taskId    String?
+  task      Task?         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  eventId   String?
+  event     Event?        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  habitId   String?
+  habit     Habit?        @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  remindAt  DateTime
+  sent      Boolean       @default(false)
+  type      ReminderType  @default(PUSH)
+  message   String?
+
+  createdAt DateTime      @default(now())
+
+  @@index([remindAt, sent])
+  @@index([userId])
+  @@map("reminders")
+}
+
+enum ReminderType {
+  PUSH
+  EMAIL
+  IN_APP
+}
+
+model Habit {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  name        String
+  icon        String    @default("🔥")
+  color       String    @default("#FFB7C5")
+  frequency   String    @default("daily")
+  targetDays  Int[]
+  targetCount Int       @default(1)
+  xpReward    Int       @default(5)
+
+  isArchived  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  logs        HabitLog[]
+  reminders   Reminder[]
+
+  @@index([userId])
+  @@map("habits")
+}
+
+model HabitLog {
+  id        String   @id @default(cuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  date      DateTime @db.Date
+  count     Int      @default(1)
+  completed Boolean  @default(false)
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@unique([habitId, date])
+  @@index([userId, date])
+  @@map("habit_logs")
+}
+
+model Goal {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  coverUrl    String?
+  type        GoalType   @default(SHORT_TERM)
+  status      GoalStatus @default(ACTIVE)
+
+  targetDate  DateTime?
+  progress    Int        @default(0)
+
+  xpReward    Int        @default(200)
+  coinReward  Int        @default(50)
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  completedAt DateTime?
+  deletedAt   DateTime?
+
+  milestones  Milestone[]
+
+  @@index([userId])
+  @@map("goals")
+}
+
+model Milestone {
+  id          String    @id @default(cuid())
+  goalId      String
+  goal        Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  title       String
+  isDone      Boolean   @default(false)
+  order       Int       @default(0)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([goalId])
+  @@map("milestones")
+}
+
+enum GoalType {
+  SHORT_TERM
+  LONG_TERM
+  LIFE
+}
+
+enum GoalStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ABANDONED
+}
+
+model XpLog {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  amount       Int
+  balanceAfter Int
+  reason       XpReason
+  refId        String?
+  metadata     Json?
+
+  createdAt    DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@map("xp_logs")
+}
+
+enum XpReason {
+  TASK_COMPLETED
+  SUBTASK_COMPLETED
+  DAILY_STREAK
+  POMODORO_FINISHED
+  ACHIEVEMENT_UNLOCKED
+  NOTE_CREATED
+  HABIT_COMPLETED
+  GOAL_COMPLETED
+  MANUAL_ADJUSTMENT
+  PENALTY
+}
+
+model LevelConfig {
+  id          String   @id @default(cuid())
+  level       Int      @unique
+  xpRequired  Int
+  rank        Rank
+  title       String
+  rewardCoins Int      @default(0)
+  badgeUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("level_configs")
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String
+  icon        String   @default("🏆")
+  rarity      Rarity   @default(COMMON)
+  xpReward    Int      @default(50)
+  coinReward  Int      @default(10)
+  requirement Json
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       UserAchievement[]
+
+  @@map("achievements")
+}
+
+enum Rarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+  MYTHIC
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  progress      Int         @default(0)
+  unlockedAt    DateTime?
+  isUnlocked    Boolean     @default(false)
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model StreakLog {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime   @db.Date
+  type      StreakType
+  count     Int        @default(1)
+
+  createdAt DateTime   @default(now())
+
+  @@unique([userId, date, type])
+  @@index([userId])
+  @@map("streak_logs")
+}
+
+enum StreakType {
+  DAILY_LOGIN
+  TASK_DONE
+  POMODORO
+  NOTE_WRITTEN
+  HABIT_DONE
+}
+
+model DailyReward {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date         DateTime @db.Date
+  xpClaimed    Int      @default(0)
+  coinsClaimed Int      @default(0)
+  claimedAt    DateTime @default(now())
+
+  @@unique([userId, date])
+  @@map("daily_rewards")
+}
+
+model PomodoroSession {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId      String?
+  task        Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  durationMin Int       @default(25)
+  breakMin    Int       @default(5)
+  completed   Boolean   @default(false)
+  xpEarned    Int       @default(0)
+
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+
+  @@index([userId, startedAt])
+  @@map("pomodoro_sessions")
+}
+
+model ShopItem {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  name        String
+  description String
+  icon        String
+  price       Int
+  type        ItemType
+  payload     Json?
+  isActive    Boolean   @default(true)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  purchases   Purchase[]
+
+  @@map("shop_items")
+}
+
+enum ItemType {
+  THEME
+  STICKER
+  AVATAR
+  MASCOT_SKIN
+  BOOST
+  COSMETIC
+}
+
+model Purchase {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemId    String
+  item      ShopItem @relation(fields: [itemId], references: [id])
+  pricePaid Int
+  createdAt DateTime @default(now())
+
+  @@unique([userId, itemId])
+  @@map("purchases")
+}
+
+model Mascot {
+  id         String    @id @default(cuid())
+  userId     String    @unique
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name       String    @default("Uru-chan")
+  species    String    @default("kitsune")
+  level      Int       @default(1)
+  xp         Int       @default(0)
+  hunger     Int       @default(100)
+  happiness  Int       @default(100)
+  energy     Int       @default(100)
+  skinCode   String    @default("default")
+  lastFedAt  DateTime?
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("mascots")
+}
+
+model Friendship {
+  id          String           @id @default(cuid())
+  requesterId String
+  requester   User             @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addresseeId String
+  addressee   User             @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+  status      FriendshipStatus @default(PENDING)
+
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId, status])
+  @@map("friendships")
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
+model TaskShare {
+  id         String          @id @default(cuid())
+  taskId     String
+  task       Task            @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission SharePermission @default(VIEW)
+
+  createdAt  DateTime        @default(now())
+
+  @@unique([taskId, userId])
+  @@map("task_shares")
+}
+
+enum SharePermission {
+  VIEW
+  EDIT
+  ADMIN
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title     String
+  body      String
+  type      NotificationType @default(INFO)
+  link      String?
+  isRead    Boolean          @default(false)
+  metadata  Json?
+
+  createdAt DateTime         @default(now())
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  INFO
+  REMINDER
+  ACHIEVEMENT
+  LEVEL_UP
+  SOCIAL
+  SYSTEM
+}
+
+model DailyStat {
+  id              String   @id @default(cuid())
+  userId          String
+  date            DateTime @db.Date
+  tasksCompleted  Int      @default(0)
+  tasksCreated    Int      @default(0)
+  habitsCompleted Int      @default(0)
+  eventsAttended  Int      @default(0)
+  notesCreated    Int      @default(0)
+  xpEarned        Int      @default(0)
+  coinsEarned     Int      @default(0)
+  pomodorosDone   Int      @default(0)
+  streakDay       Int      @default(0)
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@map("daily_stats")
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  action     String
+  entityType String?
+  entityId   String?
+  metadata   Json?
+  ip         String?
+  userAgent  String?
+
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([entityType, entityId])
+  @@map("activity_logs")
+}
+
+model AppConfig {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("app_configs")
+}

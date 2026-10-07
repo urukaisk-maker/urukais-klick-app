@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { MusicPlayer } from './MusicPlayer';
 import { motion } from 'framer-motion';
 import { useAuth } from '../store/auth';
 import { Footer } from './Footer';
@@ -13,10 +14,14 @@ const RANK_LABELS: Record<string, string> = {
 const NAV_ITEMS = [
   { to: '/', label: 'Inicio', icon: '🏠', end: true },
   { to: '/tasks', label: 'Tareas', icon: '✅' },
+  { to: '/calendar', label: 'Calendario', icon: '📅' },
   { to: '/habits', label: 'Hábitos', icon: '🔥' },
   { to: '/achievements', label: 'Logros', icon: '🏆' },
+  { to: '/music', label: 'Música', icon: '🎵' },
+  { to: '/recipes', label: 'Recetas', icon: '🍳' },
   { to: '/mascot', label: 'Mascota', icon: '🦊' },
   { to: '/shop', label: 'Tienda', icon: '🛒' },
+  { to: '/guide', label: 'Guía', icon: '📖' },
 ];
 
 export function Layout() {
@@ -115,7 +120,7 @@ export function Layout() {
         ))}
       </nav>
 
-            {/* Main content */}
+                  {/* Main content */}
       <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6 max-w-6xl mx-auto w-full">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -124,8 +129,10 @@ export function Layout() {
         >
           <Outlet />
         </motion.div>
-        <Footer /> {/* <-- AÑADIR ESTA LÍNEA */}
+        <Footer />
       </main>
+
+      <MusicPlayer />
     </div>
   );
 }

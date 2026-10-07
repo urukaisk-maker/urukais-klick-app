@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../store/auth';
 import { api } from '../lib/api';
 import type { Category } from '../types';
@@ -12,23 +13,59 @@ const RANK_LABELS: Record<string, string> = {
   HOKAGE: 'Hokage',
 };
 
+interface DailyStatus {
+  claimed: boolean;
+  claimedAt: string | null;
+  streak: number;
+  nextReward: { xp: number; coins: number };
+}
+
 export function Dashboard() {
   const user = useAuth((s) => s.user);
-  const logout = useAuth((s) => s.logout);
+  const refreshUser = useAuth((s) => s.refreshUser);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [daily, setDaily] = useState<DailyStatus | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const loadDaily = async () => {
+    try {
+      const { data } = await api.get<DailyStatus>('/users/daily-reward');
+      setDaily(data);
+    } catch {
+      /* ignora */
+    }
+  };
 
   useEffect(() => {
-    api
-      .get<Category[]>('/categories')
-      .then((r) => setCategories(r.data))
-      .finally(() => setLoading(false));
+    Promise.all([
+      api.get<Category[]>('/categories').then((r) => setCategories(r.data)),
+      loadDaily(),
+    ]).finally(() => setLoading(false));
   }, []);
+
+  const claimDaily = async () => {
+    try {
+      const { data } = await api.post('/users/daily-reward/claim');
+      setToast(
+        `🎁 +${data.coinsGained} 💰 · +${data.xpGained} XP · Racha: ${data.streak} días`,
+      );
+      await refreshUser();
+      await loadDaily();
+      setTimeout(() => setToast(null), 3500);
+    } catch (err: any) {
+      setToast('❌ ' + (err.response?.data?.message ?? 'Error'));
+      setTimeout(() => setToast(null), 2500);
+    }
+  };
 
   if (!user) return null;
 
   const xpForNextLevel = user.level * 100 + 10 * user.level * user.level;
-  const xpProgress = Math.min(100, Math.round((user.xp / xpForNextLevel) * 100));
+  const xpProgress = Math.min(
+    100,
+    Math.round((user.xp / xpForNextLevel) * 100),
+  );
 
   return (
     <div className="min-h-screen p-4 md:p-8 relative z-10">
@@ -61,15 +98,65 @@ export function Dashboard() {
             </div>
           </div>
 
-          <button onClick={logout} className="btn-ghost text-sm">
+          <button
+            onClick={() => useAuth.getState().logout()}
+            className="btn-ghost text-sm"
+          >
             Salir 🚪
           </button>
         </motion.header>
 
+        {/* 🎁 Daily Reward */}
+        {daily && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`mb-6 p-5 rounded-2xl border flex items-center justify-between flex-wrap gap-4 ${
+              daily.claimed
+                ? 'bg-white/5 border-white/10'
+                : 'bg-gradient-sakura shadow-glow-pink border-white/20'
+            }`}
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-4xl">{daily.claimed ? '✅' : '🎁'}</div>
+              <div>
+                <h3 className="font-display text-lg">
+                  {daily.claimed
+                    ? 'Recompensa reclamada hoy'
+                    : '¡Recompensa diaria disponible!'}
+                </h3>
+                <p className="text-sm opacity-80">
+                  {daily.claimed
+                    ? `Vuelve mañana · Racha actual: ${daily.streak} días 🔥`
+                    : `+${daily.nextReward.xp} XP · +${daily.nextReward.coins} 💰 · Racha: ${daily.streak} 🔥`}
+                </p>
+              </div>
+            </div>
+            {!daily.claimed && (
+              <button
+                onClick={claimDaily}
+                className="px-6 py-2 rounded-xl bg-white text-sakura-600 font-medium hover:scale-105 transition-transform shadow-lg"
+              >
+                Reclamar 🎁
+              </button>
+            )}
+          </motion.div>
+        )}
+
         {/* Stats grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <StatCard icon="⚡" label="XP Total" value={user.xp} color="neon-purple" />
-          <StatCard icon="💰" label="Monedas" value={user.coins} color="neon-yellow" />
+          <StatCard
+            icon="⚡"
+            label="XP Total"
+            value={user.xp}
+            color="neon-purple"
+          />
+          <StatCard
+            icon="💰"
+            label="Monedas"
+            value={user.coins}
+            color="neon-yellow"
+          />
           <StatCard
             icon="🔥"
             label="Racha"
@@ -120,9 +207,21 @@ export function Dashboard() {
             <h3 className="font-display text-lg mb-4">🦊 {user.mascotName}</h3>
             {user.mascot ? (
               <div className="space-y-3 text-sm">
-                <MascotBar label="Hambre" value={user.mascot.hunger} emoji="🍙" />
-                <MascotBar label="Felicidad" value={user.mascot.happiness} emoji="😊" />
-                <MascotBar label="Energía" value={user.mascot.energy} emoji="⚡" />
+                <MascotBar
+                  label="Hambre"
+                  value={user.mascot.hunger}
+                  emoji="🍙"
+                />
+                <MascotBar
+                  label="Felicidad"
+                  value={user.mascot.happiness}
+                  emoji="😊"
+                />
+                <MascotBar
+                  label="Energía"
+                  value={user.mascot.energy}
+                  emoji="⚡"
+                />
                 <p className="text-center text-3xl mt-4 animate-float">🦊</p>
               </div>
             ) : (
@@ -150,10 +249,7 @@ export function Dashboard() {
               </div>
               <div>
                 <p className="text-3xl font-display text-sakura-400">
-                  {Math.round(
-                    ((user._count?.achievements ?? 0) / 20) * 100,
-                  )}
-                  %
+                  {Math.round(((user._count?.achievements ?? 0) / 20) * 100)}%
                 </p>
                 <p className="text-xs text-slate-400 mt-1">Progreso</p>
               </div>
@@ -167,7 +263,12 @@ export function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <h2 className="font-display text-2xl mb-4">📂 Mis categorías</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display text-2xl">📂 Mis categorías</h2>
+            <span className="text-xs text-slate-400">
+              Clic en una para ver sus tareas
+            </span>
+          </div>
 
           {loading ? (
             <div className="text-center py-12 text-slate-400">
@@ -181,32 +282,65 @@ export function Dashboard() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3 + i * 0.03 }}
-                  className="glass-card-hover p-4 cursor-pointer group"
                 >
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-3 transition-transform group-hover:scale-110"
-                    style={{ backgroundColor: `${cat.color}20`, color: cat.color }}
+                  <Link
+                    to={`/category/${cat.slug}`}
+                    className="glass-card-hover p-4 cursor-pointer group block relative overflow-hidden"
                   >
-                    {cat.icon}
-                  </div>
-                  <h3 className="font-medium text-sm mb-1 truncate">{cat.name}</h3>
-                  <p className="text-xs text-slate-400">
-                    {cat._count?.tasks ?? 0} tareas
-                  </p>
-                  {cat.subcategories.length > 0 && (
-                    <p className="text-xs text-slate-500 mt-1">
-                      {cat.subcategories.length} subcategorías
-                    </p>
-                  )}
+                    {/* Glow al hover */}
+                    <div
+                      className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity"
+                      style={{
+                        background: `radial-gradient(circle at top right, ${cat.color}, transparent 70%)`,
+                      }}
+                    />
+
+                    <div className="relative">
+                      <div
+                        className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-3 transition-transform group-hover:scale-110"
+                        style={{
+                          backgroundColor: `${cat.color}20`,
+                          color: cat.color,
+                        }}
+                      >
+                        {cat.icon}
+                      </div>
+                      <h3 className="font-medium text-sm mb-1 flex items-center justify-between gap-1">
+                        <span className="truncate">{cat.name}</span>
+                        <span className="text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity text-xs shrink-0">
+                          →
+                        </span>
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        {cat._count?.tasks ?? 0}{' '}
+                        {cat._count?.tasks === 1 ? 'tarea' : 'tareas'}
+                      </p>
+                      {cat.subcategories.length > 0 && (
+                        <p className="text-xs text-slate-500 mt-1">
+                          {cat.subcategories.length} subcategorías
+                        </p>
+                      )}
+                    </div>
+                  </Link>
                 </motion.div>
               ))}
             </div>
           )}
         </motion.section>
 
-        <footer className="text-center text-xs text-slate-500 mt-12 pb-4">
-          🎌 Urukais Klick v0.1 · Hecho con 💖
-        </footer>
+        {/* Toast */}
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gradient-sakura px-6 py-3 rounded-2xl shadow-glow-pink z-50"
+            >
+              <p className="font-medium text-white text-sm">{toast}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -231,7 +365,9 @@ function StatCard({
   };
   return (
     <div
-      className={`glass-card p-4 transition-all hover:scale-[1.02] ${colorMap[color] ?? ''}`}
+      className={`glass-card p-4 transition-all hover:scale-[1.02] ${
+        colorMap[color] ?? ''
+      }`}
     >
       <div className="text-2xl mb-1">{icon}</div>
       <p className="text-2xl font-display">{value}</p>

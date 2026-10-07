@@ -94,7 +94,8 @@ export class TasksService {
         moodTag: dto.moodTag,
         estimatedPomodoros: dto.estimatedPomodoros ?? 1,
         xpReward,
-        coinReward: Math.max(1, Math.round(xpReward / 10)),
+        // ✅ CAMBIO: más monedas por tarea (antes /10)
+        coinReward: Math.max(3, Math.round(xpReward / 3)),
       },
       include: { category: true, subcategory: true, subtasks: true },
     });

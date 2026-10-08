@@ -93,17 +93,28 @@ export function Register() {
                 />
               </div>
 
-              <div>
+                            <div>
                 <label className="block text-sm text-slate-400 mb-2">
-                  Nombre (opcional)
+                  Contraseña
                 </label>
                 <input
-                  type="text"
-                  value={form.displayName}
-                  onChange={(e) => update('displayName', e.target.value)}
+                  type="password"
+                  value={form.password}
+                  onChange={(e) => update('password', e.target.value)}
+                  required
+                  minLength={10}
                   className="input-anime"
-                  placeholder="Cómo quieres que te llamen"
+                  placeholder="Mínimo 10 caracteres"
                 />
+                <p className="text-[10px] text-slate-500 mt-1.5">
+                  Debe tener: 10+ caracteres, 1 MAYÚSCULA, 1 minúscula, 1 número
+                  y 1 símbolo (!@#$%...)
+                </p>
+
+                {/* Indicador de fortaleza */}
+                {form.password.length > 0 && (
+                  <PasswordStrength password={form.password} />
+                )}
               </div>
 
               <div>
@@ -144,6 +155,57 @@ export function Register() {
       </div>
 
       <Footer />
+    </div>
+  );
+}
+
+function PasswordStrength({ password }: { password: string }) {
+  const checks = {
+    length: password.length >= 10,
+    upper: /[A-Z]/.test(password),
+    lower: /[a-z]/.test(password),
+    number: /[0-9]/.test(password),
+    symbol: /[!@#$%^&*(),.?":{}|<>_\-\[\]\/\\+=~`;]/.test(password),
+  };
+
+  const score = Object.values(checks).filter(Boolean).length;
+  const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500'];
+  const labels = ['Muy débil', 'Débil', 'Regular', 'Buena', 'Excelente'];
+
+  return (
+    <div className="mt-2">
+      <div className="flex gap-1 mb-1">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className={`h-1 flex-1 rounded-full transition-all ${
+              i < score ? colors[score - 1] : 'bg-white/10'
+            }`}
+          />
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-2 text-[10px] text-slate-500">
+        <span className={checks.length ? 'text-green-400' : ''}>
+          {checks.length ? '✓' : '○'} 10+ chars
+        </span>
+        <span className={checks.upper ? 'text-green-400' : ''}>
+          {checks.upper ? '✓' : '○'} A-Z
+        </span>
+        <span className={checks.lower ? 'text-green-400' : ''}>
+          {checks.lower ? '✓' : '○'} a-z
+        </span>
+        <span className={checks.number ? 'text-green-400' : ''}>
+          {checks.number ? '✓' : '○'} 0-9
+        </span>
+        <span className={checks.symbol ? 'text-green-400' : ''}>
+          {checks.symbol ? '✓' : '○'} !@#
+        </span>
+      </div>
+      {score > 0 && (
+        <p className="text-[10px] mt-1 text-slate-400">
+          {labels[score - 1]}
+        </p>
+      )}
     </div>
   );
 }

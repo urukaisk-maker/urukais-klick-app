@@ -10,6 +10,16 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
+// 🔐 Contraseñas comunes bloqueadas
+const WEAK_PASSWORDS = [
+  'password123',
+  'qwertyuiop',
+  'Password123!',
+  'Admin12345!',
+  'Demo12345!',
+  'Password1234!',
+];
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -18,9 +28,21 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, userAgent?: string, ip?: string) {
+    if (
+      WEAK_PASSWORDS.some(
+        (p) => p.toLowerCase() === dto.password.toLowerCase(),
+      )
+    ) {
+      throw new ConflictException(
+        'Esta contraseña es demasiado común. Elige otra distinta.',
+      );
+    }
+
     const exists = await this.prisma.user.findFirst({
-      where: { OR: [{ email: dto.email }, { username: dto.username }] },
+      where: {
+        OR: [{ email: dto.email }, { username: dto.username }],
+      },
     });
     if (exists) throw new ConflictException('Email o username ya en uso');
 
@@ -34,16 +56,20 @@ export class AuthService {
       },
     });
 
-    // Crear mascota por defecto
     await this.prisma.mascot.create({
       data: { userId: user.id, name: user.mascotName },
     });
 
-    const tokens = await this.generateTokens(user.id, user.email);
+    const tokens = await this.generateTokens(
+      user.id,
+      user.email,
+      userAgent,
+      ip,
+    );
     return { user: this.sanitize(user), ...tokens };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, userAgent?: string, ip?: string) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -59,15 +85,21 @@ export class AuthService {
       data: { lastLoginAt: new Date() },
     });
 
-    const tokens = await this.generateTokens(user.id, user.email);
+    const tokens = await this.generateTokens(
+      user.id,
+      user.email,
+      userAgent,
+      ip,
+    );
     return { user: this.sanitize(user), ...tokens };
   }
 
   async refresh(userId: string, refreshToken: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
     if (!user) throw new UnauthorizedException();
 
-    const hash = await bcrypt.hash(refreshToken, 10);
     const session = await this.prisma.session.findFirst({
       where: { userId, expiresAt: { gt: new Date() } },
       orderBy: { createdAt: 'desc' },
@@ -77,20 +109,64 @@ export class AuthService {
     const valid = await bcrypt.compare(refreshToken, session.refreshToken);
     if (!valid) throw new UnauthorizedException('Refresh token inválido');
 
-    return this.generateTokens(user.id, user.email);
+    // 🔄 Rotación: eliminamos la sesión antes de crear una nueva
+    await this.prisma.session.delete({ where: { id: session.id } });
+
+    return this.generateTokens(
+      user.id,
+      user.email,
+      session.userAgent ?? undefined,
+      session.ip ?? undefined,
+    );
   }
 
   async logout(userId: string) {
-    await this.prisma.session.deleteMany({ where: { userId } });
+    // Cierra solo la sesión más reciente (dispositivo actual)
+    const session = await this.prisma.session.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (session) {
+      await this.prisma.session.delete({ where: { id: session.id } });
+    }
     return { message: 'Sesión cerrada' };
   }
 
-  private async generateTokens(userId: string, email: string) {
+  async logoutAll(userId: string) {
+    // Cierra TODAS las sesiones (todos los dispositivos)
+    const result = await this.prisma.session.deleteMany({
+      where: { userId },
+    });
+    return { message: 'Sesión cerrada', sessionsDeleted: result.count };
+  }
+
+  async getSessions(userId: string) {
+    return this.prisma.session.findMany({
+      where: { userId, expiresAt: { gt: new Date() } },
+      select: {
+        id: true,
+        userAgent: true,
+        ip: true,
+        createdAt: true,
+        expiresAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  private async generateTokens(
+    userId: string,
+    email: string,
+    userAgent?: string,
+    ip?: string,
+  ) {
     const payload = { sub: userId, email };
+
     const accessToken = await this.jwt.signAsync(payload, {
       secret: this.config.get('JWT_SECRET'),
       expiresIn: this.config.get('JWT_EXPIRES_IN') ?? '15m',
     });
+
     const refreshToken = await this.jwt.signAsync(payload, {
       secret: this.config.get('JWT_REFRESH_SECRET'),
       expiresIn: this.config.get('JWT_REFRESH_EXPIRES_IN') ?? '7d',
@@ -102,6 +178,8 @@ export class AuthService {
         userId,
         refreshToken: refreshHash,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        userAgent: userAgent?.slice(0, 200) ?? null,
+        ip: ip?.slice(0, 45) ?? null,
       },
     });
 

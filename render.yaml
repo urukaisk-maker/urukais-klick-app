@@ -1,15 +1,17 @@
+version: "1"
+
 services:
-  # ============================================
-  # ⚙️ BACKEND (NestJS)
-  # ============================================
   - type: web
-    name: urukais-klick-backend
+    name: urukais-klick-app
     runtime: docker
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    repo: https://github.com/urukaisk-maker/urukais-klick-app
     plan: free
-    region: frankfurt  # o oregon, ohio, singapore
+    region: oregon
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     healthCheckPath: /api/docs
+    autoDeployTrigger: commit
     envVars:
       - key: NODE_ENV
         value: production
@@ -26,14 +28,11 @@ services:
       - key: JWT_REFRESH_EXPIRES_IN
         value: 7d
       - key: FRONTEND_URL
-        value: https://urukais-klick.vercel.app  # se actualizará luego
+        value: https://urukais-klick.vercel.app
 
-# ============================================
-# 🗄️ BASE DE DATOS
-# ============================================
 databases:
   - name: urukais-klick-db
     plan: free
-    region: frankfurt
+    region: oregon
     databaseName: urukais_klick
     user: urukais

@@ -190,3 +190,77 @@ export interface Note {
   createdAt: string;
   updatedAt: string;
 }
+// ============================================
+// 🎨 TEMAS
+// ============================================
+
+export type ThemeId = 'sakura' | 'neon' | 'cyber' | 'dark';
+
+export interface ThemeConfig {
+  id: ThemeId;
+  name: string;
+  icon: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    bg: string;
+    bgSoft: string;
+    text: string;
+  };
+}
+
+export const THEMES: Record<ThemeId, ThemeConfig> = {
+  sakura: {
+    id: 'sakura',
+    name: 'Sakura',
+    icon: '🌸',
+    colors: {
+      primary: '#FF4D79',
+      secondary: '#A855F7',
+      accent: '#FFB7C5',
+      bg: '#0A0A14',
+      bgSoft: '#12121F',
+      text: '#F1F5F9',
+    },
+  },
+  neon: {
+    id: 'neon',
+    name: 'Neón',
+    icon: '🌈',
+    colors: {
+      primary: '#A855F7',
+      secondary: '#22D3EE',
+      accent: '#F472B6',
+      bg: '#050510',
+      bgSoft: '#0F0F1E',
+      text: '#E0E7FF',
+    },
+  },
+  cyber: {
+    id: 'cyber',
+    name: 'Cyber',
+    icon: '💻',
+    colors: {
+      primary: '#00FF88',
+      secondary: '#00D4FF',
+      accent: '#FF00A8',
+      bg: '#000000',
+      bgSoft: '#0A0F0A',
+      text: '#00FF88',
+    },
+  },
+  dark: {
+    id: 'dark',
+    name: 'Dark Souls',
+    icon: '🌑',
+    colors: {
+      primary: '#8B4513',
+      secondary: '#D4AF37',
+      accent: '#C0C0C0',
+      bg: '#0D0D0D',
+      bgSoft: '#1A1A1A',
+      text: '#D4C5B0',
+    },
+  },
+};

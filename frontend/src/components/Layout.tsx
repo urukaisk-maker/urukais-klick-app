@@ -4,6 +4,7 @@ import { useAuth } from '../store/auth';
 import { Footer } from './Footer';
 import { MusicPlayer } from './MusicPlayer';
 import { SoundToggle } from './SoundToggle';
+import { ThemeSelector } from './ThemeSelector';
 
 const RANK_LABELS: Record<string, string> = {
   GENIN: 'Genin',
@@ -95,6 +96,7 @@ export function Layout() {
             <span>⚡ {user.xp} XP</span>
           </div>
           <div className="flex gap-2">
+            <ThemeSelector />
             <SoundToggle />
             <button
               onClick={logout}

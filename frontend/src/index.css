@@ -74,3 +74,113 @@
     @apply bg-clip-text text-transparent bg-gradient-neon;
   }
 }
+/* ============================================
+   🎨 APLICAR TEMA A ELEMENTOS CLAVE
+   ============================================ */
+
+/* Fondo general */
+body {
+  background-color: var(--color-bg) !important;
+  color: var(--color-text) !important;
+}
+
+/* Gradiente principal (botones, sidebar activo, etc) */
+.bg-gradient-sakura {
+  background-image: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-secondary) 100%
+  ) !important;
+}
+
+.bg-gradient-neon {
+  background-image: linear-gradient(
+    135deg,
+    var(--color-secondary) 0%,
+    var(--color-accent) 100%
+  ) !important;
+}
+
+/* Efecto glow de los botones (según tema) */
+.shadow-glow-pink {
+  box-shadow: 0 0 20px var(--color-primary) !important;
+}
+
+.shadow-glow-purple {
+  box-shadow: 0 0 20px var(--color-secondary) !important;
+}
+
+.shadow-glow-cyan {
+  box-shadow: 0 0 20px var(--color-accent) !important;
+}
+
+/* Texto con gradiente (logo, títulos) */
+.text-gradient-sakura {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-secondary) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.text-gradient-neon {
+  background: linear-gradient(
+    135deg,
+    var(--color-secondary) 0%,
+    var(--color-accent) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Fondo oscuro secundario (cards) */
+.bg-ink-900 {
+  background-color: var(--color-bg) !important;
+}
+.bg-ink-800 {
+  background-color: var(--color-bg-soft) !important;
+}
+
+/* Botón primario — que respete el tema */
+.btn-primary {
+  background-image: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-secondary) 100%
+  ) !important;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 25px var(--color-primary);
+}
+
+/* Input focus con el color del tema */
+.input-anime:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 30%, transparent) !important;
+}
+
+/* Barra de progreso animada */
+.bg-sakura-500 {
+  background-color: var(--color-primary) !important;
+}
+.text-sakura-400 {
+  color: var(--color-primary) !important;
+}
+.text-sakura-300 {
+  color: color-mix(in srgb, var(--color-primary) 70%, white) !important;
+}
+
+/* Suavizar la transición cuando cambias de tema */
+* {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+}

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './store/auth';
+import { useTheme } from './store/theme';
 import { SakuraParticles } from './components/SakuraParticles';
 import { CookieBanner } from './components/CookieBanner';
 import { InstallPWA } from './components/InstallPWA';
@@ -55,10 +56,12 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const fetchMe = useAuth((s) => s.fetchMe);
+  const initTheme = useTheme((s) => s.initTheme);
 
   useEffect(() => {
+    initTheme();
     fetchMe();
-  }, [fetchMe]);
+  }, [fetchMe, initTheme]);
 
   return (
     <>
@@ -67,7 +70,6 @@ export default function App() {
       <InstallPWA />
       <CoinGift />
       <Routes>
-        {/* Rutas públicas */}
         <Route
           path="/login"
           element={
@@ -85,12 +87,10 @@ export default function App() {
           }
         />
 
-        {/* Legales */}
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/cookies" element={<Cookies />} />
 
-        {/* Rutas protegidas */}
         <Route
           element={
             <ProtectedRoute>
@@ -111,7 +111,6 @@ export default function App() {
           <Route path="/category/:slug" element={<CategoryDetail />} />
         </Route>
 
-        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>

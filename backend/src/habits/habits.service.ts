@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { MissionsService } from '../missions/missions.service';
 import { CreateHabitDto } from './dto/create-habit.dto';
 import { UpdateHabitDto } from './dto/update-habit.dto';
 import { XpReason } from '@prisma/client';
 
 @Injectable()
 export class HabitsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private missions: MissionsService,
+  ) {}
 
   async findAll(userId: string) {
     const today = new Date();
@@ -17,7 +21,11 @@ export class HabitsService {
       include: {
         category: { select: { id: true, name: true, icon: true, color: true } },
         logs: {
-          where: { date: { gte: new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000) } },
+          where: {
+            date: {
+              gte: new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000),
+            },
+          },
           orderBy: { date: 'desc' },
         },
       },
@@ -127,6 +135,9 @@ export class HabitsService {
           refId: habit.id,
         },
       });
+
+      // ✅ Misión diaria
+      await this.missions.incrementProgress(userId, 'HABITS_MARKED');
     }
 
     return { log, streak: await this.getStreak(userId, id) };

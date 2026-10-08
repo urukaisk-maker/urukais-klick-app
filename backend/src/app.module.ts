@@ -15,13 +15,14 @@ import { HabitsModule } from './habits/habits.module';
 import { EventsModule } from './events/events.module';
 import { AudiusModule } from './audius/audius.module';
 import { RecipesModule } from './recipes/recipes.module';
+import { MissionsModule } from './missions/missions.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    CommonModule,
     PrismaModule,
+    CommonModule,
     AuthModule,
     UsersModule,
     CategoriesModule,
@@ -34,6 +35,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     EventsModule,
     AudiusModule,
     RecipesModule,
+    MissionsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],
 })

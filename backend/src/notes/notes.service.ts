@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { MissionsService } from '../missions/missions.service';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UpdateNoteDto } from './dto/update-note.dto';
 
 @Injectable()
 export class NotesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private missions: MissionsService,
+  ) {}
 
   async findAll(userId: string, filters: { isDiary?: boolean }) {
     return this.prisma.note.findMany({
@@ -27,7 +31,7 @@ export class NotesService {
   }
 
   async create(userId: string, dto: CreateNoteDto) {
-    return this.prisma.note.create({
+    const note = await this.prisma.note.create({
       data: {
         userId,
         title: dto.title,
@@ -40,6 +44,11 @@ export class NotesService {
         date: dto.date ? new Date(dto.date) : new Date(),
       },
     });
+
+    // ✅ Misión diaria: nota creada
+    await this.missions.incrementProgress(userId, 'NOTES_CREATED');
+
+    return note;
   }
 
   async update(userId: string, id: string, dto: UpdateNoteDto) {

@@ -72,6 +72,7 @@ model User {
   friendshipsSent    Friendship[] @relation("FriendshipRequester")
   friendshipsRecv    Friendship[] @relation("FriendshipAddressee")
   taskShares         TaskShare[]
+  dailyMissions      DailyMission[]
 
   @@index([email])
   @@index([username])
@@ -840,4 +841,42 @@ model AppConfig {
   updatedAt DateTime @updatedAt
 
   @@map("app_configs")
+}
+
+
+
+// ============================================
+// 🎯 MISIONES DIARIAS
+// ============================================
+
+model DailyMission {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  date        DateTime    @db.Date
+  type        MissionType
+  target      Int
+  progress    Int         @default(0)
+  completed   Boolean     @default(false)
+  claimed     Boolean     @default(false)
+
+  xpReward    Int
+  coinReward  Int
+
+  completedAt DateTime?
+  claimedAt   DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([userId, date, type])
+  @@index([userId, date])
+  @@map("daily_missions")
+}
+
+enum MissionType {
+  TASKS_COMPLETED
+  HABITS_MARKED
+  NOTES_CREATED
+  BONUS_ALL
 }

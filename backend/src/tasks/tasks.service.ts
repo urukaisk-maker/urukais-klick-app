@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { MissionsService } from '../missions/missions.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import {
@@ -18,7 +19,10 @@ const DIFFICULTY_MULTIPLIER: Record<Difficulty, number> = {
 
 @Injectable()
 export class TasksService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private missions: MissionsService,
+  ) {}
 
   async findAll(
     userId: string,
@@ -94,7 +98,6 @@ export class TasksService {
         moodTag: dto.moodTag,
         estimatedPomodoros: dto.estimatedPomodoros ?? 1,
         xpReward,
-        // ✅ CAMBIO: más monedas por tarea (antes /10)
         coinReward: Math.max(3, Math.round(xpReward / 3)),
       },
       include: { category: true, subcategory: true, subtasks: true },
@@ -147,6 +150,7 @@ export class TasksService {
       where: { xpRequired: { lte: newXp } },
       orderBy: { level: 'desc' },
     });
+
     const newLevel = nextLevel?.level ?? user.level;
     const newRank = nextLevel?.rank ?? user.rank;
 
@@ -183,6 +187,10 @@ export class TasksService {
       },
     });
 
+    // ✅ Misiones diarias
+    await this.missions.incrementProgress(userId, 'TASKS_COMPLETED');
+
+    // ✅ Logros
     await this.checkAchievements(userId);
 
     return {

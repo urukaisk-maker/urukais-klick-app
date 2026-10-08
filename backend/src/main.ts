@@ -14,16 +14,16 @@ async function bootstrap() {
   app.use(helmet());
   app.use(cookieParser());
 
-  // CORS para el frontend (Vite)
+  // CORS
   app.enableCors({
-    origin: config.get('FRONTEND_URL') ?? 'http://localhost:5173',
+    origin: config.get('FRONTEND_URL') ?? 'http://localhost',
     credentials: true,
   });
 
-  // Prefijo global /api
+  // Prefijo global
   app.setGlobalPrefix('api');
 
-  // Validación global de DTOs
+  // Validación global
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

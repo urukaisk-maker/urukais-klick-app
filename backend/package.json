@@ -4,7 +4,6 @@
   "description": "API de Urukais Klick",
   "main": "index.js",
   "scripts": {
-        "start:prod": "node dist/main",
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -38,7 +37,6 @@
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.7",
     "helmet": "^8.0.0",
-    "mcp-pequerecetas": "^1.1.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",

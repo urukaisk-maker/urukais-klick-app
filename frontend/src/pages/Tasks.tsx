@@ -2,7 +2,14 @@ import { FormEvent, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../lib/api';
 import { useAuth } from '../store/auth';
-import type { Category, Task, TaskStatus, Priority, Difficulty } from '../types';
+import { useFeedback } from '../hooks/useFeedback';
+import type {
+  Category,
+  Task,
+  TaskStatus,
+  Priority,
+  Difficulty,
+} from '../types';
 
 const PRIORITY_COLORS: Record<Priority, string> = {
   LOW: 'text-slate-400 border-slate-500/40',
@@ -27,13 +34,18 @@ const STATUS_FILTERS: { value: TaskStatus | 'ALL'; label: string }[] = [
 
 export function Tasks() {
   const refreshUser = useAuth((s) => s.refreshUser);
+  const { play, confetti } = useFeedback();
+
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [filter, setFilter] = useState<TaskStatus | 'ALL'>('ALL');
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [completing, setCompleting] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ text: string; kind: 'xp' | 'levelup' } | null>(null);
+  const [toast, setToast] = useState<{
+    text: string;
+    kind: 'xp' | 'levelup';
+  } | null>(null);
 
   const [form, setForm] = useState({
     title: '',
@@ -67,6 +79,7 @@ export function Tasks() {
       difficulty: form.difficulty,
       categoryId: form.categoryId || undefined,
     });
+    play('click');
     setForm({
       title: '',
       description: '',
@@ -82,12 +95,23 @@ export function Tasks() {
     setCompleting(id);
     try {
       const { data } = await api.patch(`/tasks/${id}/complete`);
-      setToast({
-        text: `+${data.xpEarned} XP · +${data.coinsEarned} monedas${
-          data.levelUp ? ' · ¡SUBISTE DE NIVEL!' : ''
-        }`,
-        kind: data.levelUp ? 'levelup' : 'xp',
-      });
+
+      if (data.levelUp) {
+        play('levelUp');
+        confetti.rain();
+        setToast({
+          text: `🎉 ¡SUBISTE DE NIVEL! +${data.xpEarned} XP · +${data.coinsEarned} monedas`,
+          kind: 'levelup',
+        });
+      } else {
+        play('taskComplete');
+        confetti.burst();
+        setToast({
+          text: `+${data.xpEarned} XP · +${data.coinsEarned} monedas`,
+          kind: 'xp',
+        });
+      }
+
       await refreshUser();
       await load();
       setTimeout(() => setToast(null), 3000);
@@ -99,6 +123,7 @@ export function Tasks() {
   const handleDelete = async (id: string) => {
     if (!confirm('¿Borrar esta tarea?')) return;
     await api.delete(`/tasks/${id}`);
+    play('error');
     load();
   };
 
@@ -144,7 +169,9 @@ export function Tasks() {
             <textarea
               placeholder="Descripción (opcional)"
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
               className="input-anime resize-none"
               rows={2}
             />
@@ -152,7 +179,10 @@ export function Tasks() {
               <select
                 value={form.priority}
                 onChange={(e) =>
-                  setForm({ ...form, priority: e.target.value as Priority })
+                  setForm({
+                    ...form,
+                    priority: e.target.value as Priority,
+                  })
                 }
                 className="input-anime"
               >
@@ -164,7 +194,10 @@ export function Tasks() {
               <select
                 value={form.difficulty}
                 onChange={(e) =>
-                  setForm({ ...form, difficulty: e.target.value as Difficulty })
+                  setForm({
+                    ...form,
+                    difficulty: e.target.value as Difficulty,
+                  })
                 }
                 className="input-anime"
               >

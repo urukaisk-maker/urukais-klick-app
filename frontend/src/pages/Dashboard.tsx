@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../store/auth';
 import { api } from '../lib/api';
+import { useFeedback } from '../hooks/useFeedback';
+import { DailyMissions } from '../components/DailyMissions';
 import type { Category } from '../types';
 
 const RANK_LABELS: Record<string, string> = {
@@ -23,6 +25,8 @@ interface DailyStatus {
 export function Dashboard() {
   const user = useAuth((s) => s.user);
   const refreshUser = useAuth((s) => s.refreshUser);
+  const { play, confetti } = useFeedback();
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [daily, setDaily] = useState<DailyStatus | null>(null);
@@ -47,6 +51,8 @@ export function Dashboard() {
   const claimDaily = async () => {
     try {
       const { data } = await api.post('/users/daily-reward/claim');
+      play('dailyReward');
+      confetti.sparkle();
       setToast(
         `🎁 +${data.coinsGained} 💰 · +${data.xpGained} XP · Racha: ${data.streak} días`,
       );
@@ -54,6 +60,7 @@ export function Dashboard() {
       await loadDaily();
       setTimeout(() => setToast(null), 3500);
     } catch (err: any) {
+      play('error');
       setToast('❌ ' + (err.response?.data?.message ?? 'Error'));
       setTimeout(() => setToast(null), 2500);
     }
@@ -142,6 +149,9 @@ export function Dashboard() {
             )}
           </motion.div>
         )}
+
+        {/* 🎯 Misiones diarias */}
+        <DailyMissions />
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -287,7 +297,6 @@ export function Dashboard() {
                     to={`/category/${cat.slug}`}
                     className="glass-card-hover p-4 cursor-pointer group block relative overflow-hidden"
                   >
-                    {/* Glow al hover */}
                     <div
                       className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity"
                       style={{

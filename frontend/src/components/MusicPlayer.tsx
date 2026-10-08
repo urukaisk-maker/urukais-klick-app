@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePlayer, formatTime } from '../store/player';
 
@@ -15,6 +16,40 @@ export function MusicPlayer() {
   const setVolume = usePlayer((s) => s.setVolume);
   const stop = usePlayer((s) => s.stop);
 
+  const [hidden, setHidden] = useState(false);
+  const lastScrollY = useRef(0);
+  const hideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-ocultar al hacer scroll hacia abajo
+  useEffect(() => {
+    lastScrollY.current = window.scrollY;
+
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      const goingDown = currentY > lastScrollY.current;
+
+      if (goingDown && currentY > 100) {
+        setHidden(true);
+      } else {
+        setHidden(false);
+      }
+
+      // Si para de hacer scroll 1.5s, mostrar
+      if (hideTimeout.current) clearTimeout(hideTimeout.current);
+      hideTimeout.current = setTimeout(() => {
+        setHidden(false);
+      }, 1500);
+
+      lastScrollY.current = currentY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (hideTimeout.current) clearTimeout(hideTimeout.current);
+    };
+  }, []);
+
   const track =
     currentIndex >= 0 && currentIndex < queue.length
       ? queue[currentIndex]
@@ -24,13 +59,19 @@ export function MusicPlayer() {
     seek(Number(e.target.value));
   };
 
+  if (!track) return null;
+
   return (
-    <AnimatePresence>
-      {track && (
+    <>
+      <AnimatePresence>
         <motion.div
           initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
+          animate={{
+            y: hidden ? 100 : 0,
+            opacity: hidden ? 0 : 1,
+          }}
           exit={{ y: 100, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-sakura-500/30 rounded-none backdrop-blur-xl"
         >
           {/* Barra de progreso global */}
@@ -134,7 +175,23 @@ export function MusicPlayer() {
             </button>
           </div>
         </motion.div>
-      )}
-    </AnimatePresence>
+      </AnimatePresence>
+
+      {/* Botón flotante para reabrir si está oculto */}
+      <AnimatePresence>
+        {hidden && track && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            onClick={() => setHidden(false)}
+            className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-sakura shadow-glow-pink flex items-center justify-center text-2xl hover:scale-110 transition-transform"
+            title="Mostrar reproductor"
+          >
+            {isPlaying ? '🎵' : '⏸️'}
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

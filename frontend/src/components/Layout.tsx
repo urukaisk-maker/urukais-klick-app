@@ -1,8 +1,10 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { MusicPlayer } from './MusicPlayer';
 import { motion } from 'framer-motion';
 import { useAuth } from '../store/auth';
 import { Footer } from './Footer';
+import { MusicPlayer } from './MusicPlayer';
+import { SoundToggle } from './SoundToggle';
+
 const RANK_LABELS: Record<string, string> = {
   GENIN: 'Genin',
   CHUNIN: 'Chunin',
@@ -66,7 +68,7 @@ export function Layout() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 space-y-1">
+        <nav className="flex-1 space-y-1 overflow-y-auto">
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}
@@ -92,35 +94,38 @@ export function Layout() {
             <span>💰 {user.coins}</span>
             <span>⚡ {user.xp} XP</span>
           </div>
-          <button
-            onClick={logout}
-            className="w-full btn-ghost text-sm flex items-center justify-center gap-2"
-          >
-            Salir 🚪
-          </button>
+          <div className="flex gap-2">
+            <SoundToggle />
+            <button
+              onClick={logout}
+              className="flex-1 btn-ghost text-sm flex items-center justify-center gap-2"
+            >
+              Salir 🚪
+            </button>
+          </div>
         </div>
       </aside>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass-card m-2 rounded-2xl p-2 flex justify-around">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-card m-2 rounded-2xl p-2 flex justify-around overflow-x-auto">
         {NAV_ITEMS.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.end}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-xs transition-colors ${
+              `flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs transition-colors shrink-0 ${
                 isActive ? 'text-sakura-400' : 'text-slate-400'
               }`
             }
           >
             <span className="text-lg">{item.icon}</span>
-            <span>{item.label}</span>
+            <span className="text-[10px]">{item.label}</span>
           </NavLink>
         ))}
       </nav>
 
-                  {/* Main content */}
+      {/* Main content */}
       <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6 max-w-6xl mx-auto w-full">
         <motion.div
           initial={{ opacity: 0, y: 10 }}

@@ -2,14 +2,28 @@ import { FormEvent, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../lib/api';
 import { useAuth } from '../store/auth';
+import { useFeedback } from '../hooks/useFeedback';
 import type { Habit } from '../types';
 
 const DAYS = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
 
-const HABIT_ICONS = ['💧', '🔥', '📚', '🏃', '🧘', '🎨', '🎵', '🍎', '😴', '🚭'];
+const HABIT_ICONS = [
+  '💧',
+  '🔥',
+  '📚',
+  '🏃',
+  '🧘',
+  '🎨',
+  '🎵',
+  '🍎',
+  '😴',
+  '🚭',
+];
 
 export function Habits() {
   const refreshUser = useAuth((s) => s.refreshUser);
+  const { play, confetti } = useFeedback();
+
   const [habits, setHabits] = useState<Habit[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -34,6 +48,7 @@ export function Habits() {
   const handleCreate = async (e: FormEvent) => {
     e.preventDefault();
     await api.post('/habits', form);
+    play('click');
     setForm({ name: '', icon: '🔥', color: '#FFB7C5' });
     setShowForm(false);
     load();
@@ -43,8 +58,11 @@ export function Habits() {
     try {
       if (wasDone) {
         await api.post(`/habits/${id}/uncheck`);
+        play('click');
       } else {
         const { data } = await api.post(`/habits/${id}/check`);
+        play('habitCheck');
+        confetti.sparkle();
         setToast(`🔥 ¡Streak: ${data.streak} días! +5 XP`);
         setTimeout(() => setToast(null), 2500);
       }
@@ -58,6 +76,7 @@ export function Habits() {
   const handleDelete = async (id: string) => {
     if (!confirm('¿Borrar este hábito?')) return;
     await api.delete(`/habits/${id}`);
+    play('error');
     load();
   };
 
@@ -189,7 +208,8 @@ export function Habits() {
                     <h3 className="font-medium truncate">{habit.name}</h3>
                     <div className="flex gap-2 text-xs text-slate-400 mt-0.5">
                       <span>
-                        🔥 {habit.streak} {habit.streak === 1 ? 'día' : 'días'}
+                        🔥 {habit.streak}{' '}
+                        {habit.streak === 1 ? 'día' : 'días'}
                       </span>
                       <span>+{habit.xpReward} XP</span>
                     </div>

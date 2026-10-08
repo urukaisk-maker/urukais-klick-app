@@ -1,3 +1,4 @@
+import { Stats } from './pages/Stats';
 import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './store/auth';
@@ -109,6 +110,7 @@ export default function App() {
           <Route path="/shop" element={<Shop />} />
           <Route path="/guide" element={<Guide />} />
           <Route path="/category/:slug" element={<CategoryDetail />} />
+                    <Route path="/stats" element={<Stats />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

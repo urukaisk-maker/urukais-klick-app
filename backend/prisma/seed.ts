@@ -190,20 +190,20 @@ async function main() {
 
   // --- Usuario demo CON MONEDAS DE REGALO ---
   const passwordHash = await bcrypt.hash('demo1234', 10);
-  const demo = await prisma.user.upsert({
+    const demo = await prisma.user.upsert({
     where: { email: 'demo@urukais.kl' },
     update: {
-      // 🎁 Regalo de bienvenida: 500 monedas
       coins: 500,
+      displayName: 'Urukais',
     },
     create: {
       email: 'demo@urukais.kl',
       username: 'urukais_demo',
       passwordHash,
-      displayName: 'Urukais Demo',
+      displayName: 'Urukais',
       bio: 'Cuenta de demostración ✨',
       emailVerified: true,
-      coins: 500, // 🎁 500 monedas de bienvenida
+      coins: 500,
     },
   });
   console.log(`✅ Usuario demo: ${demo.email} (pass: demo1234) · 🎁 500 monedas de regalo`);

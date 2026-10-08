@@ -17,6 +17,7 @@ import { EventsModule } from './events/events.module';
 import { AudiusModule } from './audius/audius.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { MissionsModule } from './missions/missions.module';
+import { StatsModule } from './stats/stats.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
 @Module({
@@ -46,9 +47,9 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     AudiusModule,
     RecipesModule,
     MissionsModule,
+    StatsModule, // ← ✅ AÑADIDO
   ],
   providers: [
-    // ThrottlerGuard ANTES que JwtAuthGuard: protege también login/register
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],

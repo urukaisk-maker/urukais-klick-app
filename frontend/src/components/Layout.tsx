@@ -25,6 +25,7 @@ const NAV_ITEMS = [
   { to: '/mascot', label: 'Mascota', icon: '🦊' },
   { to: '/shop', label: 'Tienda', icon: '🛒' },
   { to: '/guide', label: 'Guía', icon: '📖' },
+  { to: '/stats', label: 'Estadísticas', icon: '📊' }
 ];
 
 export function Layout() {

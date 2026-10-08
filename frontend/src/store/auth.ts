@@ -15,6 +15,7 @@ interface AuthState {
     displayName?: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
+  logoutAll: () => Promise<void>;
   fetchMe: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -49,6 +50,15 @@ export const useAuth = create<AuthState>((set) => ({
   logout: async () => {
     try {
       await api.post('/auth/logout');
+    } catch {
+      // ignora errores
+    }
+    set({ user: null });
+  },
+
+  logoutAll: async () => {
+    try {
+      await api.post('/auth/logout-all');
     } catch {
       // ignora errores
     }

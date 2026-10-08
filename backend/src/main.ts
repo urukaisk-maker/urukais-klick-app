@@ -42,7 +42,24 @@ async function bootstrap() {
     'http://localhost:4173',
     process.env.FRONTEND_URL,
   ].filter(Boolean) as string[];
-
+  // CORS flexible para túneles y producción
+app.enableCors({
+  origin: (origin, callback) => {
+    if (
+      !origin ||
+      origin.includes('localhost') ||
+      origin.includes('trycloudflare.com') ||
+      origin.includes('vercel.app') ||
+      origin.includes('onrender.com')
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+});
+  
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,

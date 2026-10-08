@@ -1,3 +1,5 @@
+import { Settings } from './pages/Settings';
+import { Notes } from './pages/Notes';
 import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './store/auth';
@@ -115,6 +117,8 @@ export default function App() {
           <Route path="/shop" element={<Shop />} />
           <Route path="/guide" element={<Guide />} />
           <Route path="/stats" element={<Stats />} />
+                      <Route path="/notes" element={<Notes />} />
+                    <Route path="/settings" element={<Settings />} />
           <Route path="/category/:slug" element={<CategoryDetail />} />
         </Route>
 

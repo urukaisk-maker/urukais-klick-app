@@ -27,6 +27,7 @@ export interface User {
   mascotName: string;
   language: string;
   timezone: string;
+  soundEnabled: boolean;    // ← AÑADIR
   role: Role;
   isActive: boolean;
   emailVerified: boolean;

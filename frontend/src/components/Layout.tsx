@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { to: '/', label: 'Inicio', icon: '🏠', end: true },
   { to: '/tasks', label: 'Tareas', icon: '✅' },
   { to: '/calendar', label: 'Calendario', icon: '📅' },
+  { to: '/notes', label: 'Notas', icon: '📝' },
   { to: '/habits', label: 'Hábitos', icon: '🔥' },
   { to: '/achievements', label: 'Logros', icon: '🏆' },
   { to: '/music', label: 'Música', icon: '🎵' },
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { to: '/shop', label: 'Tienda', icon: '🛒' },
   { to: '/guide', label: 'Guía', icon: '📖' },
   { to: '/stats', label: 'Estadísticas', icon: '📊' },
+  { to: '/settings', label: 'Ajustes', icon: '⚙️' }
 ];
 
 export function Layout() {
@@ -40,14 +42,33 @@ export function Layout() {
       {/* Sidebar */}
       <aside className="hidden md:flex flex-col w-64 glass-card m-4 mr-0 p-4 sticky top-4 h-[calc(100vh-2rem)]">
         {/* Logo */}
-        <div className="mb-6 text-center">
-          <div className="text-3xl mb-1">⛩️</div>
-          <h1 className="font-display text-xl text-gradient-sakura">
-            Urukais Klick
-          </h1>
+        <div className="mb-6 text-center relative">
+          {/* Halo brillante */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-24 h-24 rounded-full bg-gradient-sakura opacity-20 blur-2xl animate-pulse-glow" />
+          </div>
+
+          <div className="relative">
+            <div className="text-4xl mb-2 animate-float filter drop-shadow-[0_0_15px_rgba(255,77,121,0.6)]">
+              ⛩️
+            </div>
+            <h1 className="font-display text-2xl leading-tight text-gradient-sakura tracking-wide">
+              Urukais
+            </h1>
+            <h2 className="font-display text-xs text-slate-400 tracking-[0.4em] mt-1">
+              KLICK
+            </h2>
+
+            {/* Línea decorativa */}
+            <div className="mt-3 flex items-center justify-center gap-2">
+              <div className="h-px w-8 bg-gradient-to-r from-transparent to-sakura-500/50" />
+              <div className="w-1 h-1 rounded-full bg-sakura-500/70" />
+              <div className="h-px w-8 bg-gradient-to-l from-transparent to-sakura-500/50" />
+            </div>
+          </div>
         </div>
 
-        {/* 🔍 Botón de búsqueda */}
+        {/* 🔍 Buscar */}
         <SearchButton />
 
         {/* User mini */}
@@ -94,7 +115,7 @@ export function Layout() {
           ))}
         </nav>
 
-        {/* Footer */}
+        {/* Footer del sidebar */}
         <div className="pt-4 border-t border-white/10">
           <div className="flex items-center justify-between text-xs text-slate-400 mb-3">
             <span>💰 {user.coins}</span>

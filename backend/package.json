@@ -4,6 +4,7 @@
   "description": "API de Urukais Klick",
   "main": "index.js",
   "scripts": {
+        "start:prod": "node dist/main",
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",

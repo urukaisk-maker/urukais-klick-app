@@ -129,22 +129,26 @@ export class AuthController {
     res.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: 'lax',
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 15 * 60 * 1000,
     });
 
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: 'strict',
+      sameSite: isProd ? 'none' : 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/api/auth',
     });
   }
 
   private clearCookies(res: Response) {
-    res.clearCookie('access_token');
-    res.clearCookie('refresh_token', { path: '/api/auth' });
+    res.clearCookie('access_token', { sameSite: 'none', secure: true });
+    res.clearCookie('refresh_token', {
+      path: '/api/auth',
+      sameSite: 'none',
+      secure: true,
+    });
   }
 
   private decode(token: string): any {

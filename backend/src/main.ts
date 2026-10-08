@@ -11,11 +11,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
 
-  // Confiar en el proxy (para IP real detrás de nginx)
   const expressApp = app.getHttpAdapter().getInstance();
   expressApp.set('trust proxy', 1);
 
-  // 🛡️ Helmet: cabeceras de seguridad
+  // 🛡️ Helmet
   app.use(
     helmet({
       contentSecurityPolicy: false,
@@ -33,21 +32,24 @@ async function bootstrap() {
   );
 
   app.use(cookieParser());
-
-  // Limitar tamaño de body (protección DoS)
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-  // CORS
+  // 🌐 CORS (acepta localhost + dominio del frontend en producción)
+  const allowedOrigins = [
+    'http://localhost',
+    'http://localhost:5173',
+    'http://localhost:4173',
+    process.env.FRONTEND_URL,
+  ].filter(Boolean) as string[];
+
   app.enableCors({
-    origin: config.get('FRONTEND_URL') ?? 'http://localhost',
+    origin: allowedOrigins,
     credentials: true,
   });
 
-  // Prefijo global
   app.setGlobalPrefix('api');
 
-  // Validación global
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -56,10 +58,11 @@ async function bootstrap() {
     }),
   );
 
-  const port = config.get('PORT') ?? 3000;
+  // Railway inyecta PORT automáticamente
+  const port = process.env.PORT ?? config.get('PORT') ?? 3000;
   const isProd = process.env.NODE_ENV === 'production';
 
-  // 📖 Swagger (solo en desarrollo — oculto en producción)
+  // Swagger solo en desarrollo
   if (!isProd) {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('Urukais Klick API')
@@ -71,7 +74,7 @@ async function bootstrap() {
     SwaggerModule.setup('api/docs', app, document);
   }
 
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 
   console.log(
     `\n🎌 Urukais Klick API corriendo en: http://localhost:${port}/api`,
@@ -80,7 +83,7 @@ async function bootstrap() {
   if (!isProd) {
     console.log(`📖 Swagger: http://localhost:${port}/api/docs\n`);
   } else {
-    console.log(`🔒 Swagger deshabilitado en producción\n`);
+    console.log(`🔒 Producción · Swagger deshabilitado\n`);
   }
 }
 

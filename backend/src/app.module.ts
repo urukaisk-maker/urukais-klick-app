@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { SearchModule } from './search/search.module';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -48,6 +49,8 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     RecipesModule,
     MissionsModule,
     StatsModule, // ← ✅ AÑADIDO
+        StatsModule,
+    SearchModule, // ← añadir
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

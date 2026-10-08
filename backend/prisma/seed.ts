@@ -43,14 +43,13 @@ const CATEGORIES = [
     { name: 'Recetas favoritas', slug: 'recetas-favoritas', icon: '🍳' },
   ]},
   { name: 'Metas & Sueños', slug: 'metas', icon: '⛩️', color: '#EF4444', subs: [] },
-  
+
   { name: 'Cocina', slug: 'cocina', icon: '🍳', color: '#F59E0B', subs: [
-    { name: 'Recetas favoritas', slug: 'recetas-favoritas', icon: '⭐' },
+    { name: 'Recetas favoritas', slug: 'recetas-favoritas-cocina', icon: '⭐' },
     { name: 'Ideas para cenar', slug: 'ideas-cena', icon: '🌙' },
     { name: 'Postres', slug: 'postres', icon: '🍰' },
   ]},
 
-  // === NUEVAS CATEGORÍAS ANIME ===
   { name: 'Anime & Manga', slug: 'anime-manga', icon: '📺', color: '#F472B6', subs: [
     { name: 'Por ver', slug: 'anime-por-ver', icon: '🎬' },
     { name: 'Favoritos', slug: 'anime-favoritos', icon: '⭐' },
@@ -188,27 +187,30 @@ const SHOP_ITEMS = [
 async function main() {
   console.log('🌱 Iniciando seed de Urukais Klick...\n');
 
-  // --- Usuario demo CON MONEDAS DE REGALO ---
+  // Usuario principal con 500 monedas de regalo
   const passwordHash = await bcrypt.hash('demo1234', 10);
-    const demo = await prisma.user.upsert({
+  const demo = await prisma.user.upsert({
     where: { email: 'demo@urukais.kl' },
     update: {
       coins: 500,
       displayName: 'Urukais',
+      bio: 'Cuenta principal ✨',
     },
     create: {
       email: 'demo@urukais.kl',
       username: 'urukais_demo',
       passwordHash,
       displayName: 'Urukais',
-      bio: 'Cuenta de demostración ✨',
+      bio: 'Cuenta principal ✨',
       emailVerified: true,
       coins: 500,
     },
   });
-  console.log(`✅ Usuario demo: ${demo.email} (pass: demo1234) · 🎁 500 monedas de regalo`);
+  console.log(
+    `✅ Usuario: ${demo.email} (pass: demo1234) · 🎁 500 monedas de regalo`,
+  );
 
-  // --- Categorías + subcategorías ---
+  // Categorías + subcategorías
   for (const [i, cat] of CATEGORIES.entries()) {
     const category = await prisma.category.upsert({
       where: { userId_slug: { userId: demo.id, slug: cat.slug } },
@@ -226,7 +228,9 @@ async function main() {
 
     for (const [j, sub] of cat.subs.entries()) {
       await prisma.subcategory.upsert({
-        where: { categoryId_slug: { categoryId: category.id, slug: sub.slug } },
+        where: {
+          categoryId_slug: { categoryId: category.id, slug: sub.slug },
+        },
         update: { name: sub.name, icon: sub.icon, order: j },
         create: {
           userId: demo.id,
@@ -242,7 +246,7 @@ async function main() {
   const totalSubs = CATEGORIES.reduce((a, c) => a + c.subs.length, 0);
   console.log(`✅ ${CATEGORIES.length} categorías + ${totalSubs} subcategorías`);
 
-  // --- Niveles ---
+  // Niveles
   for (const lvl of LEVELS) {
     await prisma.levelConfig.upsert({
       where: { level: lvl.level },
@@ -252,7 +256,7 @@ async function main() {
   }
   console.log(`✅ ${LEVELS.length} niveles configurados`);
 
-  // --- Logros ---
+  // Logros
   for (const ach of ACHIEVEMENTS) {
     await prisma.achievement.upsert({
       where: { code: ach.code },
@@ -262,7 +266,7 @@ async function main() {
   }
   console.log(`✅ ${ACHIEVEMENTS.length} logros`);
 
-  // --- Tienda ---
+  // Tienda
   for (const item of SHOP_ITEMS) {
     await prisma.shopItem.upsert({
       where: { code: item.code },
@@ -272,13 +276,13 @@ async function main() {
   }
   console.log(`✅ ${SHOP_ITEMS.length} items de tienda`);
 
-  // --- Mascota inicial ---
+  // Mascota inicial
   await prisma.mascot.upsert({
     where: { userId: demo.id },
     update: {},
     create: { userId: demo.id, name: 'Uru-chan', species: 'kitsune' },
   });
-  console.log(`✅ Mascota Uru-chan creada para el demo`);
+  console.log(`✅ Mascota Uru-chan creada`);
 
   console.log('\n🎌 ¡Seed completado con éxito!');
 }

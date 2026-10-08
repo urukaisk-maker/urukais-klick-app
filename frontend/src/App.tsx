@@ -1,4 +1,3 @@
-import { Stats } from './pages/Stats';
 import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './store/auth';
@@ -7,6 +6,7 @@ import { SakuraParticles } from './components/SakuraParticles';
 import { CookieBanner } from './components/CookieBanner';
 import { InstallPWA } from './components/InstallPWA';
 import { CoinGift } from './components/CoinGift';
+import { SearchModal } from './components/SearchModal';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
@@ -20,6 +20,7 @@ import { Recipes } from './pages/Recipes';
 import { Mascot } from './pages/Mascot';
 import { Shop } from './pages/Shop';
 import { Guide } from './pages/Guide';
+import { Stats } from './pages/Stats';
 import { CategoryDetail } from './pages/CategoryDetail';
 import { Terms } from './pages/Terms';
 import { Privacy } from './pages/Privacy';
@@ -66,10 +67,14 @@ export default function App() {
 
   return (
     <>
+      {/* 🌸 Globales (fuera de Routes) */}
       <SakuraParticles />
       <CookieBanner />
       <InstallPWA />
       <CoinGift />
+      <SearchModal />
+
+      {/* 🗺️ Rutas */}
       <Routes>
         <Route
           path="/login"
@@ -109,8 +114,8 @@ export default function App() {
           <Route path="/mascot" element={<Mascot />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/guide" element={<Guide />} />
+          <Route path="/stats" element={<Stats />} />
           <Route path="/category/:slug" element={<CategoryDetail />} />
-                    <Route path="/stats" element={<Stats />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

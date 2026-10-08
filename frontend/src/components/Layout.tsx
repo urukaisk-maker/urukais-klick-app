@@ -5,6 +5,7 @@ import { Footer } from './Footer';
 import { MusicPlayer } from './MusicPlayer';
 import { SoundToggle } from './SoundToggle';
 import { ThemeSelector } from './ThemeSelector';
+import { SearchButton } from './SearchButton';
 
 const RANK_LABELS: Record<string, string> = {
   GENIN: 'Genin',
@@ -25,7 +26,7 @@ const NAV_ITEMS = [
   { to: '/mascot', label: 'Mascota', icon: '🦊' },
   { to: '/shop', label: 'Tienda', icon: '🛒' },
   { to: '/guide', label: 'Guía', icon: '📖' },
-  { to: '/stats', label: 'Estadísticas', icon: '📊' }
+  { to: '/stats', label: 'Estadísticas', icon: '📊' },
 ];
 
 export function Layout() {
@@ -45,6 +46,9 @@ export function Layout() {
             Urukais Klick
           </h1>
         </div>
+
+        {/* 🔍 Botón de búsqueda */}
+        <SearchButton />
 
         {/* User mini */}
         <div className="glass-card p-3 mb-4 flex items-center gap-3">

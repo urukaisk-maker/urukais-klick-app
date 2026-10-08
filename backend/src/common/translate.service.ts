@@ -7,7 +7,6 @@ interface CacheEntry {
 }
 
 const DICT: Record<string, string> = {
-  // Aceites y grasas
   'olive oil': 'Aceite de oliva',
   'vegetable oil': 'Aceite vegetal',
   'sunflower oil': 'Aceite de girasol',
@@ -15,8 +14,6 @@ const DICT: Record<string, string> = {
   'unsalted butter': 'Mantequilla sin sal',
   margarine: 'Margarina',
   lard: 'Manteca de cerdo',
-
-  // Verduras y hortalizas
   onion: 'Cebolla',
   onions: 'Cebollas',
   garlic: 'Ajo',
@@ -82,8 +79,6 @@ const DICT: Record<string, string> = {
   lentils: 'Lentejas',
   'kidney beans': 'Alubias rojas',
   'black beans': 'Alubias negras',
-
-  // Carnes
   chicken: 'Pollo',
   'chicken breast': 'Pechuga de pollo',
   'chicken breasts': 'Pechugas de pollo',
@@ -105,8 +100,6 @@ const DICT: Record<string, string> = {
   'lamb chops': 'Chuletas de cordero',
   duck: 'Pato',
   turkey: 'Pavo',
-
-  // Pescados y mariscos
   fish: 'Pescado',
   salmon: 'Salmón',
   tuna: 'Atún',
@@ -123,8 +116,6 @@ const DICT: Record<string, string> = {
   octopus: 'Pulpo',
   crab: 'Cangrejo',
   lobster: 'Langosta',
-
-  // Lácteos y huevos
   egg: 'Huevo',
   eggs: 'Huevos',
   milk: 'Leche',
@@ -139,8 +130,6 @@ const DICT: Record<string, string> = {
   mozzarella: 'Mozzarella',
   yoghurt: 'Yogur',
   yogurt: 'Yogur',
-
-  // Cereales y harinas
   flour: 'Harina',
   'plain flour': 'Harina de trigo',
   'self-raising flour': 'Harina con levadura',
@@ -159,8 +148,6 @@ const DICT: Record<string, string> = {
   'brown sugar': 'Azúcar moreno',
   'caster sugar': 'Azúcar glas',
   honey: 'Miel',
-
-  // Especias y condimentos
   salt: 'Sal',
   'sea salt': 'Sal marina',
   pepper: 'Pimienta',
@@ -184,8 +171,10 @@ const DICT: Record<string, string> = {
   'tomato sauce': 'Salsa de tomate',
   'tomato puree': 'Puré de tomate',
   'tomato paste': 'Concentrado de tomate',
-
-  // Bebidas y líquidos
+  mirin: 'Mirin',
+  dashi: 'Dashi',
+  'sesame oil': 'Aceite de sésamo',
+  'sesame seeds': 'Semillas de sésamo',
   water: 'Agua',
   wine: 'Vino',
   'red wine': 'Vino tinto',
@@ -198,8 +187,6 @@ const DICT: Record<string, string> = {
   'beef stock': 'Caldo de carne',
   'chicken stock cube': 'Pastilla de caldo de pollo',
   'coconut milk': 'Leche de coco',
-
-  // Otros
   'baking powder': 'Levadura en polvo',
   'bicarbonate of soda': 'Bicarbonato sódico',
   yeast: 'Levadura',
@@ -217,8 +204,6 @@ const DICT: Record<string, string> = {
   capers: 'Alcaparras',
   pickles: 'Encurtidos',
   tofu: 'Tofu',
-  'sesame oil': 'Aceite de sésamo',
-  'sesame seeds': 'Semillas de sésamo',
   cornflour: 'Maicena',
   'corn starch': 'Maicena',
   'spring onions': 'Cebolletas',
@@ -227,37 +212,25 @@ const DICT: Record<string, string> = {
   shallots: 'Chalotas',
 };
 
-const PHRASES: [RegExp, string][] = [
-  [/\bput\b/gi, 'pon'],
-  [/\badd\b/gi, 'añade'],
-  [/\bmix\b/gi, 'mezcla'],
-  [/\bheat\b/gi, 'calienta'],
-  [/\bcook\b/gi, 'cocina'],
-  [/\bstir\b/gi, 'remueve'],
-  [/\bremove\b/gi, 'retira'],
-  [/\bseason\b/gi, 'sazona'],
-  [/\bstep (\d+)/gi, 'Paso $1'],
-  [/\btablespoon(s)?\b/gi, 'cucharada$1'],
-  [/\bteaspoon(s)?\b/gi, 'cucharadita$1'],
-  [/\bcup(s)?\b/gi, 'taza$1'],
-  [/\btbsp\b/gi, 'cda'],
-  [/\btsp\b/gi, 'cdta'],
-  [/\buntil\b/gi, 'hasta que'],
-  [/\bthen\b/gi, 'luego'],
-  [/\bfor (\d+)/gi, 'durante $1'],
-];
-
 @Injectable()
 export class TranslateService {
   private readonly logger = new Logger(TranslateService.name);
   private readonly cache = new Map<string, CacheEntry>();
   private readonly TTL = 1000 * 60 * 60 * 24 * 7;
 
+  private readonly userAgent =
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36';
+
+  /**
+   * Estrategia:
+   * - Texto corto (≤ 4 palabras) → Diccionario local (instantáneo)
+   * - Texto largo → Google Translate (mejor calidad)
+   * - Si Google falla → Diccionario local como fallback
+   */
   async toSpanish(text: string): Promise<string> {
     if (!text || !text.trim()) return text;
 
-    const key = text.trim().toLowerCase();
-
+    const key = text.trim();
     const cached = this.cache.get(key);
     if (cached && cached.expiresAt > Date.now()) {
       return cached.value;
@@ -265,32 +238,23 @@ export class TranslateService {
 
     let result: string | null = null;
 
-    if (DICT[key]) {
-      result = DICT[key];
-    } else {
-      let modified = text;
-      let replaced = false;
+    const wordCount = key.split(/\s+/).length;
+    const lowerKey = key.toLowerCase();
 
-      for (const [regex, replacement] of PHRASES) {
-        if (regex.test(modified)) {
-          modified = modified.replace(regex, replacement);
-          replaced = true;
-        }
-      }
-
-      let wordsModified = modified;
-      for (const [en, es] of Object.entries(DICT)) {
-        const wordRegex = new RegExp(`\\b${en}\\b`, 'gi');
-        if (wordRegex.test(wordsModified)) {
-          wordsModified = wordsModified.replace(wordRegex, es);
-          replaced = true;
-        }
-      }
-
-      if (replaced) {
-        result = wordsModified;
-      } else {
-        result = await this.mymemory(text);
+    // 1. Coincidencia EXACTA con ingredientes del diccionario
+    if (DICT[lowerKey]) {
+      result = DICT[lowerKey];
+    }
+    // 2. Texto muy corto (≤4 palabras) → diccionario por si es un ingrediente variante
+    else if (wordCount <= 4) {
+      result = this.applyDictWords(key);
+    }
+    // 3. Texto largo → Google Translate
+    else {
+      result = await this.google(key);
+      // Si Google falla, fallback al diccionario (aunque quede mezclado)
+      if (!result) {
+        result = this.applyDictWords(key);
       }
     }
 
@@ -309,24 +273,46 @@ export class TranslateService {
     return Promise.all(items.map((t) => this.toSpanish(t)));
   }
 
-  private async mymemory(text: string): Promise<string> {
+  private async google(text: string): Promise<string | null> {
     try {
       const { data } = await axios.get(
-        'https://api.mymemory.translated.net/get',
+        'https://translate.googleapis.com/translate_a/single',
         {
           params: {
-            q: text.slice(0, 500),
-            langpair: 'en|es',
+            client: 'gtx',
+            sl: 'en',
+            tl: 'es',
+            dt: 't',
+            q: text.slice(0, 2000),
           },
-          timeout: 5000,
+          headers: {
+            'User-Agent': this.userAgent,
+            Accept: 'application/json, text/plain, */*',
+          },
+          timeout: 6000,
         },
       );
-      return data?.responseData?.translatedText ?? text;
+
+      const translated = data?.[0]?.map((p: any[]) => p[0]).join('');
+      return translated || null;
     } catch (error: any) {
       this.logger.warn(
-        `Traducción fallida para "${text.slice(0, 40)}...": ${error?.message ?? 'unknown'}`,
+        `Google falló: ${error?.message ?? 'unknown'}`,
       );
-      return text;
+      return null;
     }
+  }
+
+  /** Sustituye palabras del diccionario dentro de un texto (fallback) */
+  private applyDictWords(text: string): string {
+    let result = text;
+    const keys = Object.keys(DICT).sort((a, b) => b.length - a.length);
+    for (const en of keys) {
+      const regex = new RegExp(`\\b${en}\\b`, 'gi');
+      if (regex.test(result)) {
+        result = result.replace(regex, DICT[en]);
+      }
+    }
+    return result;
   }
 }

@@ -1,9 +1,7 @@
-import { PomodoroModule } from './pomodoro/pomodoro.module';
-import { GoalsModule } from './goals/goals.module';
 import { Module } from '@nestjs/common';
-import { SearchModule } from './search/search.module';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { PrismaModule } from './prisma/prisma.module';
 import { CommonModule } from './common/common.module';
@@ -21,13 +19,19 @@ import { AudiusModule } from './audius/audius.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { MissionsModule } from './missions/missions.module';
 import { StatsModule } from './stats/stats.module';
+import { SearchModule } from './search/search.module';
+import { GoalsModule } from './goals/goals.module';
+import { PomodoroModule } from './pomodoro/pomodoro.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
 
-    // 🛡️ Rate limiting global: 60 req/min por IP
+    // 🕕 Cron jobs (limpieza automática)
+    ScheduleModule.forRoot(),
+
+    // 🛡️ Rate limiting global
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
@@ -50,10 +54,10 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     AudiusModule,
     RecipesModule,
     MissionsModule,
-        PomodoroModule,
-    StatsModule, // ← ✅ AÑADIDO
-        StatsModule,
-    SearchModule, // ← añadir
+    StatsModule,
+    SearchModule,
+    GoalsModule,
+    PomodoroModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

@@ -25,6 +25,18 @@ export function Login() {
     }
   };
 
+  const quickLogin = async (quickEmail: string, quickPassword: string) => {
+    setError('');
+    try {
+      await login(quickEmail, quickPassword);
+      navigate('/');
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message ?? 'Error al iniciar sesión.',
+      );
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col relative z-10">
       <div className="flex-1 flex items-center justify-center p-4">
@@ -97,11 +109,25 @@ export function Login() {
               </button>
             </form>
 
-            {/* Demo hint */}
-            <div className="mt-6 p-3 rounded-xl bg-neon-purple/10 border border-neon-purple/30 text-center text-xs text-slate-300">
-              🎁 Cuenta demo: <br />
-              <code className="text-sakura-300">demo@urukais.kl</code> /{' '}
-              <code className="text-sakura-300">demo1234</code>
+            {/* Acceso rápido con cuentas de prueba */}
+            <div className="mt-6 pt-6 border-t border-white/10">
+              <p className="text-xs text-slate-500 text-center mb-3">
+                🎌 Accesos rápidos
+              </p>
+              <div className="grid grid-cols-1 gap-2">
+                <button
+                  type="button"
+                  onClick={() => quickLogin('invitado@urukais.kl', 'Invitado2026!')}
+                  disabled={loading}
+                  className="w-full flex items-center justify-between gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-left disabled:opacity-50"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">👤</span>
+                    <span className="text-sm text-slate-300">Entrar como invitado</span>
+                  </div>
+                  <span className="text-xs text-slate-500">→</span>
+                </button>
+              </div>
             </div>
 
             <p className="text-center text-sm text-slate-400 mt-6">

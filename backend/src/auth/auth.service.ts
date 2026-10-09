@@ -2,11 +2,14 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../common/email/email.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -26,6 +29,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwt: JwtService,
     private config: ConfigService,
+    private email: EmailService,
   ) {}
 
   async register(dto: RegisterDto, userAgent?: string, ip?: string) {
@@ -59,6 +63,23 @@ export class AuthService {
     await this.prisma.mascot.create({
       data: { userId: user.id, name: user.mascotName },
     });
+
+    // 📧 Enviar email de verificación
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    await this.prisma.emailVerification.create({
+      data: {
+        userId: user.id,
+        token: verificationToken,
+        email: user.email,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    });
+
+    await this.email.sendVerificationEmail(
+      user.email,
+      verificationToken,
+      user.displayName ?? user.username,
+    );
 
     const tokens = await this.generateTokens(
       user.id,
@@ -109,7 +130,6 @@ export class AuthService {
     const valid = await bcrypt.compare(refreshToken, session.refreshToken);
     if (!valid) throw new UnauthorizedException('Refresh token inválido');
 
-    // 🔄 Rotación: eliminamos la sesión antes de crear una nueva
     await this.prisma.session.delete({ where: { id: session.id } });
 
     return this.generateTokens(
@@ -121,7 +141,6 @@ export class AuthService {
   }
 
   async logout(userId: string) {
-    // Cierra solo la sesión más reciente (dispositivo actual)
     const session = await this.prisma.session.findFirst({
       where: { userId },
       orderBy: { createdAt: 'desc' },
@@ -133,7 +152,6 @@ export class AuthService {
   }
 
   async logoutAll(userId: string) {
-    // Cierra TODAS las sesiones (todos los dispositivos)
     const result = await this.prisma.session.deleteMany({
       where: { userId },
     });
@@ -152,6 +170,73 @@ export class AuthService {
       },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  // 📧 VERIFICACIÓN DE EMAIL
+
+  async verifyEmail(token: string) {
+    const record = await this.prisma.emailVerification.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+
+    if (!record) {
+      throw new UnauthorizedException('Token inválido');
+    }
+
+    if (record.usedAt) {
+      throw new UnauthorizedException('Token ya usado');
+    }
+
+    if (record.expiresAt < new Date()) {
+      throw new UnauthorizedException('Token caducado');
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: { id: record.userId },
+        data: { emailVerified: true },
+      }),
+      this.prisma.emailVerification.update({
+        where: { id: record.id },
+        data: { usedAt: new Date() },
+      }),
+    ]);
+
+    return { message: 'Email verificado correctamente ✅' };
+  }
+
+  async resendVerification(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+
+    if (user.emailVerified) {
+      return { message: 'Tu email ya está verificado' };
+    }
+
+    await this.prisma.emailVerification.deleteMany({
+      where: { userId, usedAt: null },
+    });
+
+    const token = crypto.randomBytes(32).toString('hex');
+    await this.prisma.emailVerification.create({
+      data: {
+        userId,
+        token,
+        email: user.email,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    });
+
+    await this.email.sendVerificationEmail(
+      user.email,
+      token,
+      user.displayName ?? user.username,
+    );
+
+    return { message: 'Email reenviado 📧' };
   }
 
   private async generateTokens(
@@ -173,6 +258,7 @@ export class AuthService {
     });
 
     const refreshHash = await bcrypt.hash(refreshToken, 10);
+
     await this.prisma.session.create({
       data: {
         userId,

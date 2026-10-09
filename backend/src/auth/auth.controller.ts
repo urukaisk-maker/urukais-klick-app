@@ -25,7 +25,7 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  @Throttle({ default: { limit: 3, ttl: 60000 } })
+    @Throttle({ default: { limit: 10, ttl: 60000 } })
   @ApiOperation({ summary: 'Registrar nuevo usuario' })
   async register(
     @Body() dto: RegisterDto,

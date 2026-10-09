@@ -1,3 +1,5 @@
+import { PomodoroModule } from './pomodoro/pomodoro.module';
+import { GoalsModule } from './goals/goals.module';
 import { Module } from '@nestjs/common';
 import { SearchModule } from './search/search.module';
 import { ConfigModule } from '@nestjs/config';
@@ -48,6 +50,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     AudiusModule,
     RecipesModule,
     MissionsModule,
+        PomodoroModule,
     StatsModule, // ← ✅ AÑADIDO
         StatsModule,
     SearchModule, // ← añadir

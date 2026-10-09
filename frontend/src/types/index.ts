@@ -23,11 +23,12 @@ export interface User {
   coins: number;
   currentStreak: number;
   longestStreak: number;
+  lastStreakDate: string | null;   // ← AÑADIR
   theme: string;
   mascotName: string;
   language: string;
   timezone: string;
-  soundEnabled: boolean;    // ← AÑADIR
+  soundEnabled: boolean;
   role: Role;
   isActive: boolean;
   emailVerified: boolean;
@@ -41,6 +42,7 @@ export interface User {
     goals: number;
     achievements: number;
   };
+
 }
 
 export interface Mascot {

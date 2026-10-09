@@ -18,9 +18,11 @@ const RANK_LABELS: Record<string, string> = {
 const NAV_ITEMS = [
   { to: '/', label: 'Inicio', icon: '🏠', end: true },
   { to: '/tasks', label: 'Tareas', icon: '✅' },
+  { to: '/pomodoro', label: 'Pomodoro', icon: '🍅' },
   { to: '/calendar', label: 'Calendario', icon: '📅' },
   { to: '/notes', label: 'Notas', icon: '📝' },
   { to: '/habits', label: 'Hábitos', icon: '🔥' },
+  { to: '/goals', label: 'Metas', icon: '🎯' },
   { to: '/achievements', label: 'Logros', icon: '🏆' },
   { to: '/music', label: 'Música', icon: '🎵' },
   { to: '/recipes', label: 'Recetas', icon: '🍳' },
@@ -28,9 +30,8 @@ const NAV_ITEMS = [
   { to: '/shop', label: 'Tienda', icon: '🛒' },
   { to: '/guide', label: 'Guía', icon: '📖' },
   { to: '/stats', label: 'Estadísticas', icon: '📊' },
-  { to: '/settings', label: 'Ajustes', icon: '⚙️' }
+  { to: '/settings', label: 'Ajustes', icon: '⚙️' },
 ];
-
 export function Layout() {
   const user = useAuth((s) => s.user);
   const logout = useAuth((s) => s.logout);

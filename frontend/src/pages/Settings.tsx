@@ -5,6 +5,13 @@ import { useAuth } from '../store/auth';
 import { useFeedback } from '../hooks/useFeedback';
 import { THEMES, type ThemeId } from '../types';
 import { useTheme } from '../store/theme';
+import {
+  getPermission,
+  isEnabled,
+  isSupported,
+  requestPermission,
+  setEnabled,
+} from '../hooks/useNotifications';
 
 interface Session {
   id: string;
@@ -32,6 +39,7 @@ export function Settings() {
   const [tab, setTab] = useState('profile');
   const [toast, setToast] = useState<string | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [notificationsOn, setNotificationsOn] = useState(isEnabled());
 
   // Formularios
   const [profileForm, setProfileForm] = useState({
@@ -69,7 +77,10 @@ export function Settings() {
 
   useEffect(() => {
     if (tab === 'sessions') {
-      api.get<Session[]>('/auth/sessions').then((r) => setSessions(r.data));
+      api
+        .get<Session[]>('/auth/sessions')
+        .then((r) => setSessions(r.data))
+        .catch(() => setSessions([]));
     }
   }, [tab]);
 
@@ -156,7 +167,7 @@ export function Settings() {
         ))}
       </div>
 
-      {/* Tab: Perfil */}
+      {/* ============ Tab: Perfil ============ */}
       {tab === 'profile' && (
         <motion.form
           initial={{ opacity: 0, y: 10 }}
@@ -217,9 +228,7 @@ export function Settings() {
           </div>
 
           <div>
-            <label className="block text-sm text-slate-400 mb-1">
-              Bio
-            </label>
+            <label className="block text-sm text-slate-400 mb-1">Bio</label>
             <textarea
               value={profileForm.bio}
               onChange={(e) =>
@@ -242,7 +251,7 @@ export function Settings() {
         </motion.form>
       )}
 
-      {/* Tab: Seguridad */}
+      {/* ============ Tab: Seguridad ============ */}
       {tab === 'security' && (
         <motion.form
           initial={{ opacity: 0, y: 10 }}
@@ -253,7 +262,8 @@ export function Settings() {
           <h2 className="font-display text-xl mb-4">🔒 Cambiar contraseña</h2>
 
           <div className="p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-xs text-yellow-300 mb-4">
-            ⚠️ Al cambiar la contraseña, se cerrarán TODAS tus sesiones activas.
+            ⚠️ Al cambiar la contraseña, se cerrarán TODAS tus sesiones
+            activas.
           </div>
 
           <div>
@@ -318,7 +328,7 @@ export function Settings() {
         </motion.form>
       )}
 
-      {/* Tab: Preferencias */}
+      {/* ============ Tab: Preferencias ============ */}
       {tab === 'preferences' && (
         <motion.form
           initial={{ opacity: 0, y: 10 }}
@@ -384,7 +394,9 @@ export function Settings() {
               <option value="America/Mexico_City">Ciudad de México</option>
               <option value="America/New_York">Nueva York</option>
               <option value="America/Bogota">Bogotá</option>
-              <option value="America/Argentina/Buenos_Aires">Buenos Aires</option>
+              <option value="America/Argentina/Buenos_Aires">
+                Buenos Aires
+              </option>
               <option value="Asia/Tokyo">Tokio</option>
             </select>
           </div>
@@ -404,13 +416,76 @@ export function Settings() {
             <span className="text-sm">🔊 Activar sonidos</span>
           </label>
 
+          {/* Notificaciones */}
+          <div className="pt-4 border-t border-white/10">
+            <h3 className="font-display text-lg mb-3">🔔 Notificaciones</h3>
+
+            {!isSupported() ? (
+              <div className="p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-xs text-yellow-300">
+                ⚠️ Tu navegador no soporta notificaciones
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={notificationsOn}
+                    onChange={async (e) => {
+                      const enabled = e.target.checked;
+                      setEnabled(enabled);
+                      setNotificationsOn(enabled);
+
+                      if (enabled && getPermission() !== 'granted') {
+                        const perm = await requestPermission();
+                        if (perm === 'granted') {
+                          showToast('🔔 Notificaciones activadas');
+                        } else {
+                          showToast('⚠️ Permiso denegado por el navegador');
+                          setEnabled(false);
+                          setNotificationsOn(false);
+                        }
+                      } else if (enabled) {
+                        showToast('🔔 Notificaciones activadas');
+                      } else {
+                        showToast('🔕 Notificaciones desactivadas');
+                      }
+                    }}
+                    className="w-4 h-4 accent-sakura-500"
+                  />
+                  <span className="text-sm">
+                    Activar notificaciones del navegador
+                  </span>
+                </label>
+
+                <p className="text-xs text-slate-500">
+                  Estado del permiso:{' '}
+                  <span
+                    className={
+                      getPermission() === 'granted'
+                        ? 'text-green-400'
+                        : getPermission() === 'denied'
+                          ? 'text-red-400'
+                          : 'text-yellow-400'
+                    }
+                  >
+                    {getPermission() === 'granted'
+                      ? '✅ Concedido'
+                      : getPermission() === 'denied'
+                        ? '❌ Denegado'
+                        : '⏳ No solicitado'}
+                  </span>
+                </p>
+              </div>
+            )}
+          </div>
+
           <button type="submit" className="btn-primary w-full">
             Guardar preferencias ✨
           </button>
         </motion.form>
       )}
 
-      {/* Tab: Sesiones */}
+      {/* ============ Tab: Sesiones ============ */}
       {tab === 'sessions' && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}

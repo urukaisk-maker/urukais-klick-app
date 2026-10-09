@@ -1,3 +1,6 @@
+import { NotificationManager } from './components/NotificationManager';
+import { Pomodoro } from './pages/Pomodoro';
+import { Goals } from './pages/Goals';
 import { Settings } from './pages/Settings';
 import { Notes } from './pages/Notes';
 import { useEffect } from 'react';
@@ -74,7 +77,8 @@ export default function App() {
       <CookieBanner />
       <InstallPWA />
       <CoinGift />
-      <SearchModal />
+      <SearchModal />    
+       <NotificationManager /> 
 
       {/* 🗺️ Rutas */}
       <Routes>
@@ -117,6 +121,8 @@ export default function App() {
           <Route path="/shop" element={<Shop />} />
           <Route path="/guide" element={<Guide />} />
           <Route path="/stats" element={<Stats />} />
+                         <Route path="/pomodoro" element={<Pomodoro />} />
+                     <Route path="/goals" element={<Goals />} />
                       <Route path="/notes" element={<Notes />} />
                     <Route path="/settings" element={<Settings />} />
           <Route path="/category/:slug" element={<CategoryDetail />} />

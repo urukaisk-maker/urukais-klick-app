@@ -11,9 +11,9 @@
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 
-**Agenda full-stack con sistema RPG de XP, niveles, logros, mascota virtual, tienda, música, recetas y más.**
+**Agenda full-stack con sistema RPG de XP, niveles, logros, mascota virtual, tienda, música, recetas, estadísticas y más.**
 
-[🚀 Instalación](#-instalación) · [✨ Features](#-features) · [📸 Capturas](#-capturas) · [🗺️ Roadmap](#-roadmap)
+[🚀 Instalación](#-instalación) · [✨ Features](#-features) · [🎮 Gamificación](#-sistema-de-gamificación) · [🗺️ Roadmap](#-roadmap)
 
 </div>
 
@@ -23,10 +23,13 @@
 
 ### 📋 Gestión personal
 - ✅ **Tareas** con subtareas, prioridades y dificultades
+- 🍅 **Pomodoro** con timer circular y notificaciones
 - 🔥 **Hábitos** con streaks diarios y seguimiento semanal
 - 📅 **Calendario** con eventos y vista mensual
-- 📝 **Notas** con diario personal y moods
+- 📝 **Notas** con moods y diario personal
+- 🎯 **Metas** con milestones y progreso visual
 - 📂 **21 categorías** + 28 subcategorías personalizables
+- 🔍 **Buscador global** con Ctrl+K
 
 ### 🎮 Gamificación tipo RPG
 - ⚡ **XP y niveles** con 60 rangos (Genin → Hokage)
@@ -38,35 +41,16 @@
 - 🎁 **Recompensa diaria** con bonus por racha
 - 🎯 **Misiones diarias** con progreso automático
 
-### 🎨 Diseño
+### 🎨 Diseño y experiencia
 - 🌸 Estética anime con pétalos de sakura flotando
 - ✨ Glassmorphism + gradientes neón
+- 🎨 **4 temas dinámicos** (Sakura, Neón, Cyber, Dark Souls)
 - 📱 **PWA instalable** (funciona como app nativa)
+- 🔔 **Notificaciones** del navegador
 - 🎵 **Reproductor de música** integrado con Audius
 - 🍳 **Recetas de cocina** con traducción automática
-- 🌙 Modo oscuro elegante
-
----
-
-## 📸 Capturas
-
-<div align="center">
-
-### 🏠 Dashboard
-![Dashboard](./docs/screenshots/dashboard.png)
-
-### 🎵 Reproductor de música
-![Música](./docs/screenshots/music.png)
-
-### 🍳 Recetas con traducción
-![Recetas](./docs/screenshots/recipes.png)
-
-### 🎯 Misiones diarias
-![Misiones](./docs/screenshots/missions.png)
-
-</div>
-
-> 💡 **¿Aún no hay capturas?** Abre un PR con tus propias screenshots en `docs/screenshots/`
+- 📊 **Estadísticas** con heatmap tipo GitHub
+- 🎉 **Confetti + sonidos** al completar acciones
 
 ---
 
@@ -130,9 +114,10 @@ docker compose down
 # Rebuild tras cambios
 docker compose up -d --build
 
-# Ejecutar comando en el backend
+# Ejecutar comandos en el backend
 docker compose exec backend npx prisma studio
 docker compose exec backend npx prisma db seed
+docker compose exec backend npx prisma migrate deploy
 ```
 
 ---
@@ -145,6 +130,7 @@ docker compose exec backend npx prisma db seed
 - **PostgreSQL 16** — base de datos
 - **JWT + cookies httpOnly** — autenticación segura
 - **Swagger** — documentación automática
+- **Throttler** — rate limiting
 - **Audius API** — música libre
 - **TheMealDB + traducción** — recetas internacionales
 
@@ -155,6 +141,7 @@ docker compose exec backend npx prisma db seed
 - **Zustand** — estado global ligero
 - **Framer Motion** — animaciones fluidas
 - **React Router 7** — navegación
+- **Recharts** — gráficos
 - **PWA** — instalable como app
 
 ### Infra
@@ -170,50 +157,58 @@ docker compose exec backend npx prisma db seed
 urukais-klick-app/
 ├── backend/               # API NestJS
 │   ├── src/
-│   │   ├── auth/         # JWT + cookies
-│   │   ├── users/        # perfiles y gamificación
-│   │   ├── tasks/        # CRUD tareas
+│   │   ├── auth/         # JWT + cookies + sesiones
+│   │   ├── users/        # perfiles, daily reward, contraseñas
+│   │   ├── tasks/        # CRUD tareas + XP + logros
 │   │   ├── habits/       # hábitos + streaks
-│   │   ├── categories/   # categorías
-│   │   ├── notes/        # notas
+│   │   ├── categories/   # categorías + subcategorías
+│   │   ├── notes/        # notas + diario
 │   │   ├── events/       # calendario
+│   │   ├── goals/        # metas + milestones
 │   │   ├── achievements/ # logros
 │   │   ├── missions/     # misiones diarias
+│   │   ├── pomodoro/     # timer pomodoro
 │   │   ├── mascot/       # mascota virtual
 │   │   ├── shop/         # tienda
+│   │   ├── stats/        # estadísticas
+│   │   ├── search/       # buscador global
 │   │   ├── audius/       # música
 │   │   ├── recipes/      # recetas + traducción
-│   │   └── common/       # guards, decorators
+│   │   └── common/       # guards, decorators, translate
 │   ├── prisma/
-│   │   ├── schema.prisma # 37 modelos
+│   │   ├── schema.prisma # 30+ modelos
 │   │   ├── migrations/   # historial
 │   │   └── seed.ts       # datos iniciales
 │   └── Dockerfile
 │
 ├── frontend/              # SPA React
 │   ├── src/
-│   │   ├── pages/        # 12 pantallas
+│   │   ├── pages/        # 16 pantallas
 │   │   ├── components/   # reutilizables
-│   │   ├── hooks/        # useFeedback, useInstallPrompt
-│   │   ├── store/        # Zustand (auth, player)
+│   │   ├── hooks/        # useFeedback, useInstallPrompt, useNotifications
+│   │   ├── store/        # Zustand (auth, player, theme)
 │   │   ├── lib/          # axios
 │   │   └── types/        # tipos TS
 │   ├── public/
 │   │   ├── manifest.json # PWA
-│   │   └── sw.js         # service worker
+│   │   ├── sw.js         # service worker
+│   │   ├── icon-192.png
+│   │   └── icon-512.png
 │   └── Dockerfile
 │
 ├── docker-compose.yml
 ├── .env.example
-├── start.sh
-└── stop.sh
+├── scripts/
+│   ├── start.sh
+│   └── stop.sh
+└── README.md
 ```
 
 ---
 
 ## 🎮 Sistema de gamificación
 
-### XP y niveles
+### XP por acción
 | Acción | XP |
 |--------|-----|
 | Tarea Fácil | +10 |
@@ -221,6 +216,8 @@ urukais-klick-app/
 | Tarea Difícil | +20 |
 | Tarea Jefe | +30 |
 | Hábito completado | +5 |
+| Pomodoro (25 min) | +15 |
+| Meta completada | +200 |
 | Recompensa diaria | +20 a +70 |
 | Logro desbloqueado | +30 a +5000 |
 
@@ -235,8 +232,27 @@ urukais-klick-app/
 
 ### Monedas
 - Completar tarea: **+5 a +20** 🪙
+- Pomodoro: **+3** 🪙
 - Recompensa diaria: **+10 a +40** 🪙
 - Desbloquear logro: **+5 a +1000** 🪙
+- Completar meta: **+50** 🪙
+
+---
+
+## 🔐 Seguridad
+
+- ✅ Autenticación JWT con cookies httpOnly
+- ✅ Refresh tokens con rotación
+- ✅ Rate limiting (60 req/min global, 5/min login)
+- ✅ Contraseñas fuertes obligatorias (10+, MAYÚS, min, número, símbolo)
+- ✅ Lista negra de contraseñas comunes
+- ✅ Helmet con CSP, HSTS, X-Frame-Options
+- ✅ CORS multi-origen
+- ✅ Logout-all (cierra todas las sesiones)
+- ✅ Auto-limpieza de sesiones caducadas
+- ✅ Sanitización de logs
+- ✅ Swagger oculto en producción
+- ✅ Soft delete en lugar de borrado duro
 
 ---
 
@@ -255,10 +271,17 @@ urukais-klick-app/
 - [x] Misiones diarias
 - [x] PWA instalable
 - [x] Confetti + sonidos
-- [x] **Temas de la tienda funcionando** ← *en desarrollo*
-- [ ] Buscador global
+- [x] 4 temas dinámicos
+- [x] Buscador global (Ctrl+K)
+- [x] Estadísticas con heatmap
+- [x] Notas con moods
+- [x] Ajustes de perfil
+- [x] Metas con milestones
+- [x] Pomodoro con notificaciones
+- [x] Notificaciones del navegador
 - [ ] Modo claro
-- [ ] Deploy en producción
+- [ ] Multi-idioma (ES/EN)
+- [ ] Deploy permanente con dominio propio
 
 ---
 

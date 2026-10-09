@@ -14,6 +14,8 @@ const SECTIONS = [
       { label: 'Tarea Difícil', value: '20 XP' },
       { label: 'Tarea Jefe', value: '30 XP' },
       { label: 'Hábito completado', value: '5 XP' },
+      { label: 'Pomodoro (25 min)', value: '15 XP' },
+      { label: 'Meta completada', value: '200 XP' },
       { label: 'Recompensa diaria', value: '20-70 XP' },
     ],
   },
@@ -39,10 +41,12 @@ const SECTIONS = [
       'Las monedas son tu divisa en la tienda. Las ganas de varias formas:',
     details: [
       { label: 'Completar tarea', value: '+5 a +20 🪙' },
+      { label: 'Pomodoro', value: '+3 🪙' },
       { label: 'Recompensa diaria', value: '+10 a +40 🪙' },
       { label: 'Desbloquear logro', value: '+5 a +1000 🪙' },
       { label: 'Regalo flotante', value: '+25 🪙 (cada hora)' },
       { label: 'Subir de nivel', value: '+Nivel × 5 🪙' },
+      { label: 'Completar meta', value: '+50 🪙' },
     ],
   },
   {
@@ -71,6 +75,47 @@ const SECTIONS = [
       { label: 'Día 7', value: '+55 XP · +31 🪙' },
       { label: 'Día 10+', value: '+70 XP · +40 🪙' },
       { label: 'Si rompes la racha', value: 'Vuelves a día 1 😢' },
+    ],
+  },
+  {
+    icon: '🍅',
+    title: 'Pomodoro',
+    color: 'from-red-400 to-pink-600',
+    description:
+      'Técnica de concentración: 25 min de trabajo + 5 min de descanso. Cada 4 pomodoros, descanso largo.',
+    details: [
+      { label: '🍅 Clásico', value: '25 / 5 / 15 min' },
+      { label: '⚡ Rápido', value: '15 / 3 / 10 min' },
+      { label: '🌊 Profundo', value: '50 / 10 / 20 min' },
+      { label: 'Al completar', value: '+15 XP · +3 🪙' },
+      { label: 'Notificación', value: 'Aviso al terminar' },
+    ],
+  },
+  {
+    icon: '📝',
+    title: 'Notas y Diario',
+    color: 'from-cyan-500 to-blue-600',
+    description:
+      'Escribe notas, ideas o entradas de diario con estado de ánimo.',
+    details: [
+      { label: '📝 Notas', value: 'Rápidas e informales' },
+      { label: '📔 Diario', value: 'Entradas personales' },
+      { label: '8 moods', value: '😊😢😡😴🤔🔥💖😎' },
+      { label: '📌 Fijar', value: 'Las importantes arriba' },
+    ],
+  },
+  {
+    icon: '🎯',
+    title: 'Metas y Sueños',
+    color: 'from-orange-500 to-red-600',
+    description:
+      'Define metas a corto, largo plazo o de vida. Divídelas en hitos.',
+    details: [
+      { label: '⚡ Corto plazo', value: 'Días o semanas' },
+      { label: '🎯 Largo plazo', value: 'Meses o un año' },
+      { label: '🌟 Meta de vida', value: 'Sueño personal' },
+      { label: 'Progreso', value: 'Se calcula por hitos' },
+      { label: 'Al 100%', value: '+200 XP · +50 🪙' },
     ],
   },
   {
@@ -113,6 +158,71 @@ const SECTIONS = [
       { label: 'Navega meses', value: '← → para cambiar' },
     ],
   },
+  {
+    icon: '🔍',
+    title: 'Buscador Global',
+    color: 'from-pink-500 to-rose-600',
+    description:
+      'Encuentra cualquier cosa en tu agenda con Ctrl+K.',
+    details: [
+      { label: 'Atajo', value: 'Ctrl+K o Cmd+K' },
+      { label: 'Busca en', value: 'Tareas, notas, eventos, categorías, hábitos' },
+      { label: 'Navegación', value: '↑ ↓ para moverse, Enter para abrir' },
+      { label: 'Cerrar', value: 'ESC' },
+    ],
+  },
+  {
+    icon: '📊',
+    title: 'Estadísticas',
+    color: 'from-emerald-500 to-cyan-600',
+    description:
+      'Visualiza tu progreso con gráficos y un heatmap tipo GitHub.',
+    details: [
+      { label: '🗓️ Heatmap', value: 'Últimos 6 meses de actividad' },
+      { label: '📈 XP semanal', value: 'Evolución de tu XP' },
+      { label: '🍩 Categorías', value: 'Tareas por categoría' },
+      { label: '📊 30 días', value: 'Tareas completadas' },
+    ],
+  },
+  {
+    icon: '🎨',
+    title: 'Temas Visuales',
+    color: 'from-fuchsia-500 to-purple-600',
+    description:
+      'Cambia el look de Urukais con 4 temas dinámicos.',
+    details: [
+      { label: '🌸 Sakura', value: 'Rosa + morado (defecto)' },
+      { label: '🌈 Neón', value: 'Cyberpunk brillante' },
+      { label: '💻 Cyber', value: 'Hacker verde neón' },
+      { label: '🌑 Dark Souls', value: 'Oscuro elegante' },
+    ],
+  },
+  {
+    icon: '📱',
+    title: 'Instalar como App',
+    color: 'from-blue-500 to-indigo-600',
+    description:
+      'Urukais Klick es una PWA. Instálala en tu móvil o PC.',
+    details: [
+      { label: 'Chrome/Edge', value: 'Menú → Instalar aplicación' },
+      { label: 'iOS Safari', value: 'Compartir → Añadir a inicio' },
+      { label: 'Android', value: 'Menú → Añadir a pantalla inicio' },
+      { label: 'Firefox', value: 'No soporta PWA de escritorio' },
+      { label: 'Ventaja', value: 'Funciona como app nativa' },
+    ],
+  },
+  {
+    icon: '🔔',
+    title: 'Notificaciones',
+    color: 'from-violet-500 to-purple-600',
+    description:
+      'Activa las notificaciones del navegador para no perder el ritmo.',
+    details: [
+      { label: 'Activar', value: 'Ajustes → Preferencias' },
+      { label: 'Avisos', value: 'Fin de Pomodoro, racha diaria' },
+      { label: 'Permiso', value: 'Chrome pregunta una vez' },
+    ],
+  },
 ];
 
 const TIPS = [
@@ -121,7 +231,11 @@ const TIPS = [
   '💡 Los logros de racha dan las mejores recompensas',
   '💡 Usa el calendario para planificar la semana',
   '💡 Completa hábitos a primera hora para motivarte',
+  '💡 Usa Pomodoro para tareas que requieren concentración',
+  '💡 Divide metas grandes en hitos pequeños',
+  '💡 Escribe en el diario para reflexionar',
   '💡 Ahorra monedas para las skins legendarias de Uru-chan',
+  '💡 Usa Ctrl+K para buscar cualquier cosa rápido',
 ];
 
 export function Guide() {
@@ -137,9 +251,11 @@ export function Guide() {
         >
           📖
         </motion.div>
-        <h1 className="font-display text-3xl mb-2">Cómo funciona Urukais</h1>
+        <h1 className="font-display text-3xl mb-2">
+          Cómo funciona Urukais
+        </h1>
         <p className="text-slate-400">
-          Guía rápida para sacarle todo el partido a tu agenda anime
+          Guía completa de tu agenda personal anime
         </p>
       </div>
 
@@ -150,7 +266,7 @@ export function Guide() {
             key={section.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
+            transition={{ delay: i * 0.03 }}
             className="glass-card p-5"
           >
             <div className="flex items-center gap-3 mb-3">
@@ -162,7 +278,9 @@ export function Guide() {
               <h2 className="font-display text-lg">{section.title}</h2>
             </div>
 
-            <p className="text-sm text-slate-400 mb-4">{section.description}</p>
+            <p className="text-sm text-slate-400 mb-4">
+              {section.description}
+            </p>
 
             <div className="space-y-1.5">
               {section.details.map((d) => (
@@ -171,7 +289,9 @@ export function Guide() {
                   className="flex justify-between text-xs py-1 border-b border-white/5 last:border-0"
                 >
                   <span className="text-slate-400">{d.label}</span>
-                  <span className="text-slate-200 font-medium">{d.value}</span>
+                  <span className="text-slate-200 font-medium text-right ml-2">
+                    {d.value}
+                  </span>
                 </div>
               ))}
             </div>
@@ -186,7 +306,9 @@ export function Guide() {
         transition={{ delay: 0.4 }}
         className="glass-card p-6 mb-8"
       >
-        <h2 className="font-display text-xl mb-4">✨ Consejos de maestría</h2>
+        <h2 className="font-display text-xl mb-4">
+          ✨ Consejos de maestría
+        </h2>
         <ul className="space-y-2 text-sm">
           {TIPS.map((tip, i) => (
             <li
@@ -197,6 +319,38 @@ export function Guide() {
             </li>
           ))}
         </ul>
+      </motion.div>
+
+      {/* Atajos de teclado */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45 }}
+        className="glass-card p-6 mb-8"
+      >
+        <h2 className="font-display text-xl mb-4">
+          ⌨️ Atajos de teclado
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+          {[
+            { key: 'Ctrl + K', action: 'Buscador global' },
+            { key: 'ESC', action: 'Cerrar modales' },
+            { key: '↑ ↓', action: 'Navegar resultados' },
+            { key: 'Enter', action: 'Abrir resultado' },
+            { key: 'Ctrl + Shift + R', action: 'Recarga dura' },
+            { key: 'F12', action: 'Abrir DevTools' },
+          ].map((s) => (
+            <div
+              key={s.key}
+              className="flex items-center gap-2 p-2 rounded-lg bg-white/5"
+            >
+              <kbd className="px-2 py-1 rounded bg-white/10 text-xs border border-white/10">
+                {s.key}
+              </kbd>
+              <span className="text-xs text-slate-400">{s.action}</span>
+            </div>
+          ))}
+        </div>
       </motion.div>
 
       {/* CTA */}
@@ -217,10 +371,16 @@ export function Guide() {
             ✅ Crear tarea
           </Link>
           <Link
-            to="/habits"
+            to="/pomodoro"
+            className="px-6 py-2 rounded-xl bg-white text-sakura-600 font-medium hover:scale-105 transition-transform"
+          >
+            🍅 Pomodoro
+          </Link>
+          <Link
+            to="/goals"
             className="px-6 py-2 rounded-xl bg-white/20 text-white font-medium border border-white/30 hover:bg-white/30 transition"
           >
-            🔥 Nuevo hábito
+            🎯 Nueva meta
           </Link>
         </div>
       </motion.div>

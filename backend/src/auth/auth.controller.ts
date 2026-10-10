@@ -125,30 +125,41 @@ export class AuthController {
     refreshToken: string,
   ) {
     const isProd = process.env.NODE_ENV === 'production';
+    const domain = process.env.COOKIE_DOMAIN || undefined;
+    const base = {
+      httpOnly: true,
+      secure: process.env.COOKIE_SECURE === 'true' || isProd,
+      sameSite: (process.env.COOKIE_SAMESITE as 'lax' | 'strict' | 'none') ??
+        (isProd ? 'none' : 'lax'),
+      domain,
+      path: '/',
+    } as const;
 
     res.cookie('access_token', accessToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
+      ...base,
       maxAge: 15 * 60 * 1000,
     });
 
     res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'strict',
+      ...base,
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/api/auth',
     });
   }
 
   private clearCookies(res: Response) {
-    res.clearCookie('access_token', { sameSite: 'none', secure: true });
-    res.clearCookie('refresh_token', {
-      path: '/api/auth',
-      sameSite: 'none',
-      secure: true,
-    });
+    const isProd = process.env.NODE_ENV === 'production';
+    const domain = process.env.COOKIE_DOMAIN || undefined;
+    const base = {
+      httpOnly: true,
+      secure: process.env.COOKIE_SECURE === 'true' || isProd,
+      sameSite: (process.env.COOKIE_SAMESITE as 'lax' | 'strict' | 'none') ??
+        (isProd ? 'none' : 'lax'),
+      domain,
+    } as const;
+
+    res.clearCookie('access_token', { ...base, path: '/' });
+    res.clearCookie('refresh_token', { ...base, path: '/api/auth' });
   }
 
   private decode(token: string): any {

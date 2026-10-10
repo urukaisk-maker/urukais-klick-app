@@ -37,11 +37,13 @@ async function bootstrap() {
 
   // 🌐 CORS (acepta localhost + dominio del frontend en producción)
   const allowedOrigins = [
-    'http://localhost',
-    'http://localhost:5173',
-    'http://localhost:4173',
-    process.env.FRONTEND_URL,
-  ].filter(Boolean) as string[];
+  'http://localhost',
+  'http://localhost:5173',
+  'http://localhost:4173',
+  process.env.FRONTEND_URL,
+  ...(process.env.CORS_ORIGINS?.split(',') ?? []),
+].filter(Boolean) as string[];
+
   // CORS flexible para túneles y producción
 app.enableCors({
   origin: (origin, callback) => {
